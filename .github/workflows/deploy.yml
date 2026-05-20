@@ -13,17 +13,16 @@ jobs:
   deploy:
     runs-on: ubuntu-latest
     steps:
-      # Změnili jsme @v4 na @v5 (nebo vyšší), čímž vymažeme to varování
       - uses: actions/checkout@v5
       
       - name: Vložit API klíč do konfigurace
         run: |
-          sed -i "s/%%API_KEY%%/${{ secrets.API_KEY }}/g" js/config.js
+          sed -i "s/%%API_KEY%%/${{ secrets.API_KEY }}/g" files/js/config.js
       
       - uses: actions/configure-pages@v5
       
       - uses: actions/upload-pages-artifact@v3
         with:
-          path: '.'
+          path: './files' # Tady říkáme GitHubu, že web je uvnitř složky files
           
       - uses: actions/deploy-pages@v4
