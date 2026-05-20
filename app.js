@@ -54,17 +54,37 @@ async function loadPobocky(search = '', userLat = null, userLng = null) {
     </div>`;
 
   try {
-    let url = `${CONFIG.API_BASE}/api/pobocky?limit=${CONFIG.MAX_RESULTS}`;
+    // Sestavení správné URL adresy se všemi parametry
+    let url = `${CONFIG.API_BASE}/api/pobocky?limit=${CONFIG.MAX_RESULTS || 100}`;
     if (search) url += `&search=${encodeURIComponent(search)}`;
     if (userLat && userLng) url += `&lat=${userLat}&lng=${userLng}`;
 
-    const res = await fetch(`${CONFIG.API_BASE}/api/pobocky`, {
+    // OPRAVENO: Nyní posíláme kompletní 'url' s parametry, ne pouze základní API endpoint
+    const res = await fetch(url, {
       headers: { 'x-api-key': CONFIG.API_KEY }
     });
     if (!res.ok) throw new Error(`HTTP ${res.status}`);
 
     const data = await res.json();
-    const pobocky = data.pobocky || [];
+    let pobocky = data.pobocky || [];
+
+    // ✨ POJISTKA PRO ŘAZENÍ: Pokud máme polohu uživatele, seřadíme pobočky od nejbližší
+    if (userLat && userLng && Array.isArray(pobocky)) {
+      // Pokud backend nevrátí rovnou spočítanou vzdálenost, spočítáme si ji sami přes Haversine z map.js
+      pobocky.forEach(p => {
+        if (p.lat && p.lng && !p.vzdalenost) {
+          p.vzdalenost = haversineDistance(userLat, userLng, p.lat, p.lng);
+        }
+      });
+
+      // Seřazení pole od nejmenší vzdálenosti po největší
+      pobocky.sort((a, b) => {
+        const distA = parseFloat(a.vzdalenost) || 0;
+        const distB = parseFloat(b.vzdalenost) || 0;
+        return distA - distB;
+      });
+    }
+
     allPobocky = pobocky;
 
     // Aktualizuj stats
@@ -119,8 +139,11 @@ function renderSidebarList(pobocky, userLat, userLng) {
 
   listEl.innerHTML = pobocky.map((p, i) => {
     let distHtml = '';
-    if (userLat && userLng && p.lat && p.lng) {
-      const dist = Math.round(haversineDistance(userLat, userLng, p.lat, p.lng) * 10) / 10;
+    // Bereme buď vzdálenost z backendu, nebo tu, kterou jsme si případně dopočítali výše
+    const finalDist = p.vzdalenost || (userLat && userLng && p.lat && p.lng ? haversineDistance(userLat, userLng, p.lat, p.lng) : null);
+    
+    if (finalDist !== null) {
+      const dist = Math.round(parseFloat(finalDist) * 10) / 10;
       distHtml = `<div class="pobocka-distance">${dist} km</div>`;
     }
 
@@ -148,6 +171,7 @@ function renderSidebarList(pobocky, userLat, userLng) {
 function renderListGrid(pobocky) {
   const grid = document.getElementById('listGrid');
 
+  if (!grid) return;
   if (!pobocky.length) {
     grid.innerHTML = `<div class="empty-state" style="grid-column:1/-1">Žádné pobočky</div>`;
     return;
@@ -192,8 +216,10 @@ function renderListGrid(pobocky) {
       </div>`);
 
     let distHtml = '';
-    if (currentUserLat && currentUserLng && p.lat && p.lng) {
-      const dist = Math.round(haversineDistance(currentUserLat, currentUserLng, p.lat, p.lng) * 10) / 10;
+    const finalDist = p.vzdalenost || (currentUserLat && currentUserLng && p.lat && p.lng ? haversineDistance(currentUserLat, currentUserLng, p.lat, p.lng) : null);
+    
+    if (finalDist !== null) {
+      const dist = Math.round(parseFloat(finalDist) * 10) / 10;
       distHtml = `<div class="list-card-distance">📍 ${dist} km od Vás</div>`;
     }
 
