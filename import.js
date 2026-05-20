@@ -67,6 +67,9 @@ async function handleFile(file) {
   try {
     const res = await fetch(`${CONFIG.API_BASE}/api/pobocky/import`, {
       method: 'POST',
+      headers: {
+        'x-api-key': CONFIG.API_KEY
+      },
       body: formData,
     });
 
