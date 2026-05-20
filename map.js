@@ -144,7 +144,7 @@ function createPopupContent(p, userLat, userLng) {
       </div>`);
   }
 
-  // OPRAVENO: Funkční a validní URL odkaz pro Google navigaci
+  // OPRAVENO: Validní odkaz na Google Mapy
   const queryAdresa = encodeURIComponent(`${p.ulice || ''}, ${p.psc || ''} ${p.mesto || ''}`);
   
   return `
@@ -172,7 +172,7 @@ function renderMapMarkers(pobocky, userLat = null, userLng = null) {
   const bounds = [];
 
   pobocky.forEach((p, i) => {
-    // ✨ OPRAVA: Převedeme souřadnice z Excelu na desetinná čísla a ošetříme i variantu 'lon'
+    // Převedeme souřadnice z Excelu na desetinná čísla a ošetříme i variantu 'lon'
     const lat = parseFloat(p.lat);
     const lng = parseFloat(p.lng || p.lon);
 
@@ -211,15 +211,15 @@ function renderMapMarkers(pobocky, userLat = null, userLng = null) {
     }
   }
 
-  // Bezpečné ohraničení mapy, které zabrání pádu Leafletu
-  if (bounds.length > 0 && bounds.length <= 20) {
+  // ✨ OPRAVENO: Navýšen limit z 20 na 500, aby fitBounds správně pobralo všechny pobočky v ČR
+  if (bounds.length > 0 && bounds.length <= 500) {
     try {
       map.fitBounds(bounds, { padding: [40, 40], maxZoom: 13 });
     } catch (e) {
       resetMapView();
     }
   } else {
-    // POJISTKA: Pokud máme moc poboček (např. z Excelu) nebo naopak nulu, vycentrujeme mapu bezpečně na ČR
+    // POJISTKA: Pokud nemáme žádné pobočky, skočíme na výchozí zobrazení ČR
     resetMapView();
   }
 }
