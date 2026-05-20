@@ -6,17 +6,13 @@
   <title>Pobočky – Najdi nás</title>
   <meta name="description" content="Najděte nejbližší pobočku pomocí vyhledávání adresy nebo PSČ." />
 
-  <!-- Leaflet CSS -->
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css" />
-  <!-- Google Fonts -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;1,9..40,300&display=swap" rel="stylesheet">
-  <!-- App CSS -->
-  <link rel="stylesheet" href="css/app.css" />
+  <link rel="stylesheet" href="app.css" />
 </head>
 <body>
 
-  <!-- ── HEADER ─────────────────────────────────────────────── -->
   <header class="site-header">
     <div class="header-inner">
       <div class="logo">
@@ -35,13 +31,10 @@
     </div>
   </header>
 
-  <!-- ── MAIN LAYOUT ────────────────────────────────────────── -->
   <main class="app-layout">
 
-    <!-- SIDEBAR -->
     <aside class="sidebar">
 
-      <!-- Vyhledávání -->
       <div class="search-block">
         <div class="search-label">Hledat pobočku</div>
         <div class="search-wrap">
@@ -61,7 +54,6 @@
         <div id="autocomplete" class="autocomplete-list" style="display:none"></div>
       </div>
 
-      <!-- Geolokace tlačítko -->
       <button class="geo-btn" id="geoBtn" onclick="getUserLocation()">
         <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
           <circle cx="8" cy="8" r="3" fill="currentColor"/>
@@ -71,12 +63,10 @@
         Použít mou polohu
       </button>
 
-      <!-- Stats bar -->
       <div class="stats-bar" id="statsBar">
         <span id="statsText">Načítám pobočky…</span>
       </div>
 
-      <!-- Výsledky poboček -->
       <div class="results-list" id="resultsList">
         <div class="loading-state" id="loadingState">
           <div class="spinner"></div>
@@ -85,17 +75,14 @@
       </div>
     </aside>
 
-    <!-- MAP VIEW -->
     <section class="map-section view-map active" id="viewMap">
       <div id="map"></div>
     </section>
 
-    <!-- LIST VIEW -->
     <section class="list-section view-list" id="viewList" style="display:none">
       <div class="list-grid" id="listGrid"></div>
     </section>
 
-    <!-- IMPORT VIEW -->
     <section class="import-section view-import" id="viewImport" style="display:none">
       <div class="import-inner">
         <div class="import-header">
@@ -155,7 +142,6 @@
 
   </main>
 
-  <!-- ── POBOČKA DETAIL PANEL ────────────────────────────────── -->
   <div class="detail-panel" id="detailPanel" style="display:none">
     <div class="detail-panel-inner">
       <button class="detail-close" onclick="closeDetailPanel()">✕</button>
@@ -164,15 +150,13 @@
   </div>
   <div class="detail-overlay" id="detailOverlay" onclick="closeDetailPanel()"></div>
 
-  <!-- ── TOAST NOTIFIKACE ─────────────────────────────────────── -->
   <div class="toast-container" id="toastContainer"></div>
 
-  <!-- Scripts -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
-  <script src="js/config.js"></script>
-  <script src="js/map.js"></script>
-  <script src="js/search.js"></script>
-  <script src="js/import.js"></script>
-  <script src="js/app.js"></script>
+  <script src="config.js"></script>
+  <script src="map.js"></script>
+  <script src="search.js"></script>
+  <script src="import.js"></script>
+  <script src="app.js"></script>
 </body>
 </html>
