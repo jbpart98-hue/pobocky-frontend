@@ -24,11 +24,17 @@ function initSearch() {
     const clearBtn = document.getElementById('clearSearch');
     if (clearBtn) clearBtn.style.display = val ? 'block' : 'none';
 
+    // Pokud uživatel text přepisuje ručně, smažeme staré souřadnice polohy,
+    // protože vyhledává nový text/místo.
+    currentUserLat = null;
+    currentUserLng = null;
+
     // Debounced search (načítání/filtrování poboček)
     clearTimeout(searchDebounceTimer);
     searchDebounceTimer = setTimeout(() => {
       if (typeof loadPobocky === 'function') {
-        loadPobocky(val, currentUserLat, currentUserLng);
+        // Dokud nevybere konkrétní bod, posíláme null, null (ukáže všechny pobočky odpovídající textu)
+        loadPobocky(val, null, null);
       }
     }, CONFIG.SEARCH_DEBOUNCE || 400);
 
