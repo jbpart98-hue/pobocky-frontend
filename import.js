@@ -70,7 +70,7 @@ async function handleFile(file) {
       headers: {
         'x-api-key': CONFIG.API_KEY
       },
-      body: formData,
+      body: formData
     });
 
     const data = await res.json();
