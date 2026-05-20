@@ -246,17 +246,27 @@ function getUserLocation() {
  * Vymaže vyhledávání
  */
 function clearSearch() {
-  const input = document.getElementById('searchInput');
-  if (!input) return;
-  
-  input.value = '';
-  document.getElementById('clearSearch').style.display = 'none';
-  document.getElementById('autocomplete').style.display = 'none';
-  
-  if (typeof loadPobocky === 'function') {
-    loadPobocky('', currentUserLat, currentUserLng);
+  // 1. Vymaže text ve vyhledávacím inputu (případně uprav ID podle tvého HTML)
+  const searchInput = document.getElementById('searchInput') || document.getElementById('search-input');
+  if (searchInput) searchInput.value = '';
+
+  // 2. Vynulujeme globální souřadnice uživatele, pokud si je aplikace držela
+  if (typeof currentUserLat !== 'undefined') currentUserLat = null;
+  if (typeof currentUserLng !== 'undefined') currentUserLng = null;
+
+  // 3. Smažeme marker uživatele z mapy, pokud existuje
+  if (userMarker && map) {
+    map.removeLayer(userMarker);
+    userMarker = null;
   }
-  input.focus();
+
+  // 4. ✨ KLÍČOVÉ: Načteme znovu čistý seznam poboček bez filtrů a polohy
+  loadPobocky('', null, null);
+
+  // 5. ✨ KLÍČOVÉ: Vrátíme mapu zpět do pohledu na celou ČR
+  if (typeof resetMapView === 'function') {
+    resetMapView();
+  }
 }
 
 /**
