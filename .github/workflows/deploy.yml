@@ -9,15 +9,12 @@ permissions:
   pages: write
   id-token: write
 
-# Tímto přinutíme GitHub běžet na novém Node.js 24 a schováme varování
-env:
-  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: 'true'
-
 jobs:
   deploy:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      # Změnili jsme @v4 na @v5 (nebo vyšší), čímž vymažeme to varování
+      - uses: actions/checkout@v5
       
       - name: Vložit API klíč do konfigurace
         run: |
