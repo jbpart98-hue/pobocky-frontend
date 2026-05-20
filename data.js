@@ -1771,6 +1771,4 @@ const DATA_POBOCEK = [
     "Poradce": "PM Znojmo, s.r.o.",
     "E-mail": "info@partnersbanka.cz"
   }
-]
-  }
 ];
