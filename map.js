@@ -144,7 +144,7 @@ function createPopupContent(p, userLat, userLng) {
       </div>`);
   }
 
-  // OPRAVENO: Validní odkaz na Google Mapy
+  // OPRAVENO: Validní vyhledávací odkaz pro Google Mapy (?q= místo /0)
   const queryAdresa = encodeURIComponent(`${p.ulice || ''}, ${p.psc || ''} ${p.mesto || ''}`);
   
   return `
@@ -171,7 +171,13 @@ function renderMapMarkers(pobocky, userLat = null, userLng = null) {
 
   const bounds = [];
 
-  pobocky.forEach((p, i) => {
+  // ✨ UPRAVENO: Pokud uživatel zadal adresu (máme userLat/Lng), 
+  // omezíme zobrazení na mapě na 3 nejbližší pobočky. Jinak ukážeme všechny.
+  const zobrazenyPobocky = (userLat && userLng) 
+    ? pobocky.slice(0, 3) 
+    : pobocky;
+
+  zobrazenyPobocky.forEach((p, i) => {
     // Převedeme souřadnice z Excelu na desetinná čísla a ošetříme i variantu 'lon'
     const lat = parseFloat(p.lat);
     const lng = parseFloat(p.lng || p.lon);
@@ -185,7 +191,7 @@ function renderMapMarkers(pobocky, userLat = null, userLng = null) {
     const marker = L.marker([lat, lng], {
       icon: createPobockaIcon(i + 1),
       title: p.nazev,
-      zIndexOffset: pobocky.length - i,
+      zIndexOffset: zobrazenyPobocky.length - i,
     });
 
     marker.bindPopup(createPopupContent(p, userLat, userLng), {
@@ -211,15 +217,15 @@ function renderMapMarkers(pobocky, userLat = null, userLng = null) {
     }
   }
 
-  // ✨ OPRAVENO: Navýšen limit z 20 na 500, aby fitBounds správně pobralo všechny pobočky v ČR
+  // Zafixování pohledu mapy na ohraničený okruh (buď 3 pobočky + uživatel, nebo celá ČR)
   if (bounds.length > 0 && bounds.length <= 500) {
     try {
-      map.fitBounds(bounds, { padding: [40, 40], maxZoom: 13 });
+      // Padding zajistí, aby markery nebyly nalepené na úplném okraji mapy
+      map.fitBounds(bounds, { padding: [50, 50], maxZoom: 13 });
     } catch (e) {
       resetMapView();
     }
   } else {
-    // POJISTKA: Pokud nemáme žádné pobočky, skočíme na výchozí zobrazení ČR
     resetMapView();
   }
 }
