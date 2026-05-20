@@ -17,22 +17,26 @@ function initSearch() {
   const input = document.getElementById('searchInput');
   const autocomplete = document.getElementById('autocomplete');
 
+  if (!input || !autocomplete) return;
+
   input.addEventListener('input', (e) => {
     const val = e.target.value.trim();
     document.getElementById('clearSearch').style.display = val ? 'block' : 'none';
 
-    // Debounced search
+    // Debounced search (načítání/filtrování poboček)
     clearTimeout(searchDebounceTimer);
     searchDebounceTimer = setTimeout(() => {
-      loadPobocky(val);
-    }, CONFIG.SEARCH_DEBOUNCE);
+      if (typeof loadPobocky === 'function') {
+        loadPobocky(val, currentUserLat, currentUserLng);
+      }
+    }, CONFIG.SEARCH_DEBOUNCE || 400);
 
-    // Debounced autocomplete
+    // Debounced autocomplete (našeptávání adres)
     clearTimeout(autocompleteDebounceTimer);
     if (val.length >= 3) {
       autocompleteDebounceTimer = setTimeout(() => {
         fetchAutocomplete(val);
-      }, CONFIG.AUTOCOMPLETE_DEBOUNCE);
+      }, CONFIG.AUTOCOMPLETE_DEBOUNCE || 300);
     } else {
       autocomplete.style.display = 'none';
     }
@@ -69,39 +73,39 @@ function initSearch() {
 }
 
 /**
- * Načte autocomplete návrhy z API
+ * Načte autocomplete návrhy přímo z bezpečné veřejné OpenStreetMap (Nominatim)
  */
 async function fetchAutocomplete(query) {
+  const autocompleteContainer = document.getElementById('autocomplete');
   try {
-    const res = await fetch(`${CONFIG.API_BASE}/api/geocode/autocomplete?q=${encodeURIComponent(query)}`, {
-      headers: { 'x-api-key': CONFIG.API_KEY }
+    // Ptáme se přímo Nominatimu, omezujeme výsledky pouze na ČR (countrycodes=cz)
+    const url = `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(query)}&countrycodes=cz&limit=5`;
+    
+    const res = await fetch(url, {
+      headers: { 'Accept-Language': 'cs-CZ,cs;q=0.9' }
     });
-    const data = await res.json();
 
-    if (data.success && data.results && data.results.length > 0) {
-      renderAutocomplete(data.results);
+    if (!res.ok) {
+      autocompleteContainer.style.display = 'none';
+      return;
+    }
+
+    const items = await res.json();
+    
+    if (items && items.length > 0) {
+      // Mapujeme data na jednotný formát pro naši aplikaci
+      const results = items.map(i => ({
+        display_name: i.display_name,
+        lat: parseFloat(i.lat),
+        lng: parseFloat(i.lon)
+      }));
+      renderAutocomplete(results);
     } else {
-      document.getElementById('autocomplete').style.display = 'none';
+      autocompleteContainer.style.display = 'none';
     }
-  } catch (err) {
-    // Fallback – zkus přímo Nominatim
-    try {
-      const url = `${CONFIG.NOMINATIM_URL}/search?format=json&q=${encodeURIComponent(query)}&countrycodes=cz&limit=5`;
-      const res = await fetch(url, {
-        headers: { 'Accept-Language': 'cs,en' }
-      });
-      const items = await res.json();
-      if (items.length > 0) {
-        const results = items.map(i => ({
-          display_name: i.display_name,
-          lat: parseFloat(i.lat),
-          lng: parseFloat(i.lon)
-        }));
-        renderAutocomplete(results);
-      }
-    } catch (e) {
-      document.getElementById('autocomplete').style.display = 'none';
-    }
+  } catch (e) {
+    console.error('Chyba našeptávače:', e);
+    autocompleteContainer.style.display = 'none';
   }
 }
 
@@ -119,7 +123,7 @@ function renderAutocomplete(items) {
   }
 
   container.innerHTML = items.map((item, i) => {
-    // Zkrátit dlouhý display_name
+    // Zkrátit dlouhý display_name, vynechat zbytek jako okres/kraj
     const parts = item.display_name.split(',');
     const main = parts[0].trim();
     const sub = parts.slice(1, 3).join(',').trim();
@@ -145,34 +149,40 @@ function updateAutocompleteActive() {
 }
 
 /**
- * Vybere položku z autocomplete a geocoduje
+ * Vybere položku z autocomplete a přenese mapu
  */
 function selectAutocompleteItem(item) {
   const input = document.getElementById('searchInput');
   document.getElementById('autocomplete').style.display = 'none';
 
-  if (item.lat && item.lng) {
-    // Máme souřadnice – ukáž na mapě a filtruj pobočky
+  if (item && item.lat && item.lng) {
     currentUserLat = item.lat;
     currentUserLng = item.lng;
 
-    showUserMarker(item.lat, item.lng, true);
+    // Voláme funkci z map.js pro vykreslení bodu uživatele
+    if (typeof showUserMarker === 'function') {
+      showUserMarker(item.lat, item.lng, true);
+    }
 
-    // Zkrátit název
+    // Zkrátit název do políčka (např. jen Název ulice a číslo)
     const shortName = item.display_name.split(',')[0];
     input.value = shortName;
 
-    // Reload poboček s polohou
-    loadPobocky('', item.lat, item.lng);
+    // Znovu načteme pobočky, předáme jim polohu uživatele, aby se seřadily podle vzdálenosti
+    if (typeof loadPobocky === 'function') {
+      loadPobocky('', item.lat, item.lng);
+    }
+    
     showToast(`Poloha nastavena: ${shortName}`, 'success');
   }
 }
 
 /**
- * Získá polohu uživatele
+ * Získá polohu uživatele přes GPS/prohlížeč
  */
 function getUserLocation() {
   const btn = document.getElementById('geoBtn');
+  if (!btn) return;
 
   if (!navigator.geolocation) {
     showToast('Geolokace není podporována v tomto prohlížeči', 'error');
@@ -191,8 +201,13 @@ function getUserLocation() {
       currentUserLat = latitude;
       currentUserLng = longitude;
 
-      showUserMarker(latitude, longitude, true);
-      loadPobocky('', latitude, longitude);
+      if (typeof showUserMarker === 'function') {
+        showUserMarker(latitude, longitude, true);
+      }
+      
+      if (typeof loadPobocky === 'function') {
+        loadPobocky('', latitude, longitude);
+      }
 
       btn.disabled = false;
       btn.innerHTML = `
@@ -232,10 +247,15 @@ function getUserLocation() {
  */
 function clearSearch() {
   const input = document.getElementById('searchInput');
+  if (!input) return;
+  
   input.value = '';
   document.getElementById('clearSearch').style.display = 'none';
   document.getElementById('autocomplete').style.display = 'none';
-  loadPobocky('', currentUserLat, currentUserLng);
+  
+  if (typeof loadPobocky === 'function') {
+    loadPobocky('', currentUserLat, currentUserLng);
+  }
   input.focus();
 }
 
@@ -254,14 +274,24 @@ function sanitizeHtml(str) {
  */
 function showToast(msg, type = 'info', duration = 3000) {
   const container = document.getElementById('toastContainer');
+  if (!container) return;
+  
   const toast = document.createElement('div');
   toast.className = `toast ${type}`;
   toast.textContent = msg;
   container.appendChild(toast);
+  
   setTimeout(() => {
     toast.style.opacity = '0';
     toast.style.transform = 'translateY(8px)';
     toast.style.transition = '0.3s ease';
     setTimeout(() => toast.remove(), 300);
   }, duration);
+}
+
+// Spustíme inicializaci vyhledávání po načtení skriptu
+document.addEventListener('DOMContentLoaded', initSearch);
+// Pojistka pro případ, že DOM už je načtený
+if (document.readyState === 'interactive' || document.readyState === 'complete') {
+  initSearch();
 }
