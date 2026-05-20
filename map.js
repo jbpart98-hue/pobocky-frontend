@@ -140,6 +140,7 @@ function createPopupContent(p, userLat, userLng) {
       </div>`);
   }
 
+  // OPRAVENO: Správná URL pro Google navigaci
   return `
     <div class="popup-inner">
       <div class="popup-nazev">${p.nazev}</div>
@@ -192,11 +193,16 @@ function renderMapMarkers(pobocky, userLat = null, userLng = null) {
     bounds.push([userLat, userLng]);
   }
 
-  // Fit bounds pokud máme markery
+  // OPRAVENO: Bezpečné ohraničení mapy, které zabrání pádu Leafletu
   if (bounds.length > 0 && bounds.length <= 20) {
     try {
       map.fitBounds(bounds, { padding: [40, 40], maxZoom: 13 });
-    } catch (e) {}
+    } catch (e) {
+      resetMapView();
+    }
+  } else {
+    // POJISTKA: Pokud máme moc poboček (např. z Excelu) nebo naopak nulu, vycentrujeme mapu bezpečně na ČR
+    resetMapView();
   }
 }
 
