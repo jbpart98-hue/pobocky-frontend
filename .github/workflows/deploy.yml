@@ -15,14 +15,17 @@ jobs:
     steps:
       - uses: actions/checkout@v5
       
-      # Tento krok vytvoří config.js přímo v kořenu (na hlavní stránce)
+      # Tento krok vytvoří KOMPLETNÍ config.js i se středem a zoomem mapy
       - name: Vytvořit bezpečný config.js
         run: |
           cat << 'EOF' > config.js
           const CONFIG = {
               API_BASE: 'https://moje-pobocky-backend.onrender.com',
               NOMINATIM_URL: 'https://nominatim.openstreetmap.org',
-              API_KEY: '${{ secrets.API_KEY }}'
+              API_KEY: '${{ secrets.API_KEY }}',
+              MAP_DEFAULT_CENTER: [49.8175, 15.4730], // Střed ČR
+              MAP_DEFAULT_ZOOM: 7,                    // Přiblížení na celou ČR
+              MAP_ZOOM_ON_SELECT: 15                  // Detail při kliknutí na pobočku
           };
           EOF
       
