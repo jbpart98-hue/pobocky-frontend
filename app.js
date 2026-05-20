@@ -58,7 +58,9 @@ async function loadPobocky(search = '', userLat = null, userLng = null) {
     if (search) url += `&search=${encodeURIComponent(search)}`;
     if (userLat && userLng) url += `&lat=${userLat}&lng=${userLng}`;
 
-    const res = await fetch(url);
+    const res = await fetch(`${CONFIG.API_BASE}/api/pobocky`, {
+      headers: { 'x-api-key': CONFIG.API_KEY }
+    });
     if (!res.ok) throw new Error(`HTTP ${res.status}`);
 
     const data = await res.json();
