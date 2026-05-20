@@ -1,80 +1,77 @@
 /**
- * Hlavní app.js – Orchestrace aplikace
- * Všechna data jsou čerpána lokálně z DATA_POBOCEK (viz data.js)
+ * app.js - Finální verze
+ * Orchestruje zobrazení dat z data.js přímo v prohlížeči.
  */
 
 let allPobocky = [];
 let currentView = 'map';
 
+// Inicializace po načtení stránky
 document.addEventListener('DOMContentLoaded', () => {
-    // 1. Inicializace modulů
+    // 1. Inicializace mapy a hledání (pokud jsou definovány v map.js/search.js)
     if (typeof initMap === 'function') initMap();
     if (typeof initSearch === 'function') initSearch();
     
-    // 2. Načtení dat z globální proměnné definované v data.js
+    // 2. Načtení dat z globálního souboru data.js
     if (typeof DATA_POBOCEK !== 'undefined') {
         zpracujData(DATA_POBOCEK);
     } else {
-        console.error("Soubor data.js nebyl načten!");
-        document.getElementById('statsText').textContent = "Chyba: Data nebyla nalezena.";
+        console.error("Chyba: data.js nebyl načten nebo proměnná DATA_POBOCEK neexistuje.");
+        document.getElementById('statsText').textContent = "Chyba: Data nenalezena";
     }
 });
 
 /**
- * Zpracuje data a inicializuje zobrazení
+ * Zpracuje předaná data a vykreslí je do aplikace
  */
 function zpracujData(pobocky) {
     allPobocky = pobocky;
     
-    // Aktualizace stavového řádku
+    // Aktualizace počtu v hlavičce
     const statsText = document.getElementById('statsText');
     if (statsText) {
         statsText.textContent = `Celkem ${pobocky.length} poboček`;
     }
     
-    // Vykreslení dat
+    // Vykreslení do mapy
     if (typeof renderMapMarkers === 'function') {
         renderMapMarkers(pobocky);
     }
+    
+    // Pokud jsme v listu, rovnou vykreslíme seznam
     if (currentView === 'list') {
         renderListGrid(pobocky);
     }
 }
 
 /**
- * Přepínání pohledů (Mapa / Seznam)
+ * Přepínání mezi Mapou a Seznamem
  */
 function switchView(view) {
     currentView = view;
 
-    // Upravit aktivní tlačítka v menu
+    // Přepínání aktivního tlačítka v menu
     document.querySelectorAll('.nav-btn').forEach(btn => {
         btn.classList.toggle('active', btn.dataset.view === view);
     });
 
-    // Změnit viditelnost sekcí
+    // Změna viditelnosti sekcí
     document.getElementById('viewMap').style.display = view === 'map' ? 'flex' : 'none';
     document.getElementById('viewList').style.display = view === 'list' ? 'flex' : 'none';
 
-    // Sidebar: zobrazení v závislosti na pohledu
-    const sidebar = document.querySelector('.sidebar');
-    if (sidebar) {
-        sidebar.style.display = (view === 'import') ? 'none' : 'flex';
-    }
-
-    // Invalidate map size pro správné vykreslení po přepnutí
+    // Refresh mapy při přepnutí
     if (view === 'map' && typeof map !== 'undefined' && map) {
         setTimeout(() => map.invalidateSize(), 50);
     }
 
-    // Pokud přepneme na seznam, ihned vykreslíme
+    // Vykreslení seznamu, pokud přepneme na list
     if (view === 'list') {
         renderListGrid(allPobocky);
     }
 }
 
 /**
- * Vykreslí seznam poboček v gridu
+ * Vykreslí seznam poboček (List view)
  */
 function renderListGrid(pobocky) {
     const grid = document.getElementById('listGrid');
@@ -100,32 +97,31 @@ function renderListGrid(pobocky) {
 }
 
 /**
- * Pomocná funkce pro bezpečné vložení HTML (prevence XSS)
+ * Pomocná funkce pro bezpečné vypsání textu (XSS prevence)
  */
 function sanitizeHtml(str) {
-    if (!str) return '';
     const div = document.createElement('div');
     div.textContent = str;
     return div.innerHTML;
 }
 
 /**
- * Aktivace položky (vhodné pro mapu i seznam)
+ * Akce po kliknutí na pobočku v seznamu
  */
 function setActiveItem(index) {
-    const pobocka = allPobocky[index];
-    if (!pobocka) return;
+    const p = allPobocky[index];
+    if (!p) return;
 
-    // Pokud je aktivní pohled seznam, přepni na mapu pro detail
-    if (currentView === 'list') {
-        switchView('map');
-    }
+    // Na mobilu/tabletu přepne na mapu, aby uživatel viděl polohu
+    switchView('map');
 
-    // Zvýraznění v mapě (vyžaduje funkce z map.js)
+    // Zvýrazní marker v mapě (funkce musí být v map.js)
     if (typeof highlightMarker === 'function') {
         highlightMarker(index);
     }
-    if (typeof flyToPobocka === 'function' && pobocka.lat && pobocka.lng) {
-        flyToPobocka(pobocka.lat, pobocka.lng);
+    
+    // Přesune mapu na místo (funkce musí být v map.js)
+    if (typeof flyToPobocka === 'function' && p.lat && p.lng) {
+        flyToPobocka(p.lat, p.lng);
     }
 }
