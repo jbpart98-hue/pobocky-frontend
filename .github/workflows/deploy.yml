@@ -15,14 +15,21 @@ jobs:
     steps:
       - uses: actions/checkout@v5
       
-      - name: Vložit API klíč do konfigurace
+      # Tento krok vytvoří config.js přímo v kořenu (na hlavní stránce)
+      - name: Vytvořit bezpečný config.js
         run: |
-          sed -i "s/%%API_KEY%%/${{ secrets.API_KEY }}/g" js/config.js
+          cat << 'EOF' > config.js
+          const CONFIG = {
+              API_BASE: 'https://moje-pobocky-backend.onrender.com',
+              NOMINATIM_URL: 'https://nominatim.openstreetmap.org',
+              API_KEY: '${{ secrets.API_KEY }}'
+          };
+          EOF
       
       - uses: actions/configure-pages@v5
       
       - uses: actions/upload-pages-artifact@v3
         with:
-          path: '.' # Tečka znamená, že index.html je na hlavní stránce GitHubu
+          path: '.'
           
       - uses: actions/deploy-pages@v4
