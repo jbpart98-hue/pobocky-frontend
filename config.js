@@ -7,6 +7,7 @@ window.CONFIG = {
   // API base URL – prázdný string = stejný server jako frontend
   // Pro vývoj s odděleným backendem: 'https://moje-pobocky-backend.onrender.com'
   API_BASE: 'https://moje-pobocky-backend.onrender.com',
+  API_KEY: '%%API_KEY%%',
 
   // Výchozí střed mapy (ČR)
   MAP_DEFAULT_CENTER: [49.8175, 15.473],
