@@ -3,41 +3,31 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Pobočky – Najdi nás</title>
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css" />
+  <title>Katalog poboček</title>
   <link rel="stylesheet" href="app.css" />
 </head>
 <body>
 
   <header class="site-header">
     <div class="header-inner">
-      <span>Pobočky</span>
-      <nav class="header-nav">
-        <button class="nav-btn active" data-view="map" onclick="switchView('map')">Mapa</button>
-        <button class="nav-btn" data-view="list" onclick="switchView('list')">Seznam</button>
-      </nav>
+      <h1>Seznam poboček</h1>
     </div>
   </header>
 
   <main class="app-layout">
-    <aside class="sidebar">
-      <div id="statsBar"><span id="statsText">Načítám...</span></div>
-      <div class="results-list" id="resultsList"></div>
-    </aside>
+    <div class="search-block">
+      <input type="text" id="searchInput" placeholder="Hledat pobočku, město nebo PSČ..." autocomplete="off">
+      <button id="clearSearch" style="display:none">✕</button>
+    </div>
 
-    <section class="map-section view-map active" id="viewMap">
-      <div id="map"></div>
-    </section>
+    <div class="stats-bar">
+      <span id="statsText">Načítám...</span>
+    </div>
 
-    <section class="list-section view-list" id="viewList" style="display:none">
-      <div class="list-grid" id="listGrid"></div>
-    </section>
+    <div class="results-list" id="listGrid"></div>
   </main>
 
   <script src="data.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
-  <script src="map.js"></script>
-  <script src="search.js"></script>
   <script src="app.js"></script>
 </body>
 </html>
