@@ -4,75 +4,25 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Pobočky – Najdi nás</title>
-  <meta name="description" content="Najděte nejbližší pobočku pomocí vyhledávání adresy nebo PSČ." />
-
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css" />
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;1,9..40,300&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="app.css" />
 </head>
 <body>
 
   <header class="site-header">
     <div class="header-inner">
-      <div class="logo">
-        <svg width="32" height="32" viewBox="0 0 32 32" fill="none">
-          <circle cx="16" cy="14" r="8" stroke="currentColor" stroke-width="2.5"/>
-          <circle cx="16" cy="14" r="3" fill="currentColor"/>
-          <path d="M16 22 L16 30" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"/>
-        </svg>
-        <span>Pobočky</span>
-      </div>
+      <span>Pobočky</span>
       <nav class="header-nav">
         <button class="nav-btn active" data-view="map" onclick="switchView('map')">Mapa</button>
         <button class="nav-btn" data-view="list" onclick="switchView('list')">Seznam</button>
-        <button class="nav-btn" data-view="import" onclick="switchView('import')">Import</button>
       </nav>
     </div>
   </header>
 
   <main class="app-layout">
-
     <aside class="sidebar">
-
-      <div class="search-block">
-        <div class="search-label">Hledat pobočku</div>
-        <div class="search-wrap">
-          <svg class="search-icon" width="16" height="16" viewBox="0 0 16 16" fill="none">
-            <circle cx="6.5" cy="6.5" r="5" stroke="currentColor" stroke-width="1.8"/>
-            <path d="M10.5 10.5L14 14" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
-          </svg>
-          <input
-            id="searchInput"
-            type="text"
-            placeholder="PSČ, město nebo ulice…"
-            autocomplete="off"
-            spellcheck="false"
-          />
-          <button id="clearSearch" class="clear-btn" style="display:none" onclick="clearSearch()">✕</button>
-        </div>
-        <div id="autocomplete" class="autocomplete-list" style="display:none"></div>
-      </div>
-
-      <button class="geo-btn" id="geoBtn" onclick="getUserLocation()">
-        <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
-          <circle cx="8" cy="8" r="3" fill="currentColor"/>
-          <path d="M8 1v2M8 13v2M1 8h2M13 8h2" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
-          <circle cx="8" cy="8" r="6" stroke="currentColor" stroke-width="1.5"/>
-        </svg>
-        Použít mou polohu
-      </button>
-
-      <div class="stats-bar" id="statsBar">
-        <span id="statsText">Načítám pobočky…</span>
-      </div>
-
-      <div class="results-list" id="resultsList">
-        <div class="loading-state" id="loadingState">
-          <div class="spinner"></div>
-          <span>Načítám pobočky…</span>
-        </div>
-      </div>
+      <div id="statsBar"><span id="statsText">Načítám...</span></div>
+      <div class="results-list" id="resultsList"></div>
     </aside>
 
     <section class="map-section view-map active" id="viewMap">
@@ -82,81 +32,12 @@
     <section class="list-section view-list" id="viewList" style="display:none">
       <div class="list-grid" id="listGrid"></div>
     </section>
-
-    <section class="import-section view-import" id="viewImport" style="display:none">
-      <div class="import-inner">
-        <div class="import-header">
-          <h2>Import poboček</h2>
-          <p>Nahrajte Excel soubor (.xlsx) se seznamem poboček</p>
-        </div>
-
-        <div class="upload-zone" id="uploadZone">
-          <input type="file" id="fileInput" accept=".xlsx" style="display:none" onchange="handleFileSelect(event)" />
-          <div class="upload-icon">
-            <svg width="48" height="48" viewBox="0 0 48 48" fill="none">
-              <rect x="8" y="4" width="32" height="40" rx="4" stroke="currentColor" stroke-width="2"/>
-              <path d="M16 20h16M16 28h12M16 36h8" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
-              <path d="M28 4v10h12" stroke="currentColor" stroke-width="2"/>
-            </svg>
-          </div>
-          <div class="upload-text">
-            <strong>Přetáhněte .xlsx soubor sem</strong>
-            <span>nebo <button onclick="document.getElementById('fileInput').click()">vyberte soubor</button></span>
-          </div>
-          <div class="upload-hint">Povinné sloupce: Název, Ulice, PSČ, Město</div>
-        </div>
-
-        <div class="import-result" id="importResult" style="display:none"></div>
-
-        <div class="import-actions">
-          <a href="https://moje-pobocky-backend.onrender.com/api/pobocky/sample" class="btn-outline" download>
-            <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
-              <path d="M8 1v9M4 7l4 4 4-4M2 13h12" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/>
-            </svg>
-            Stáhnout vzorový Excel
-          </a>
-        </div>
-
-        <div class="column-info">
-          <div class="col-section">
-            <div class="col-label required">Povinné sloupce</div>
-            <div class="col-tags">
-              <span class="col-tag">Název</span>
-              <span class="col-tag">Ulice</span>
-              <span class="col-tag">PSČ</span>
-              <span class="col-tag">Město</span>
-            </div>
-          </div>
-          <div class="col-section">
-            <div class="col-label optional">Volitelné sloupce</div>
-            <div class="col-tags">
-              <span class="col-tag opt">Telefon</span>
-              <span class="col-tag opt">Poradce</span>
-              <span class="col-tag opt">E-mail</span>
-              <span class="col-tag opt">Otevírací doba</span>
-            </div>
-          </div>
-        </div>
-      </div>
-    </section>
-
   </main>
 
-  <div class="detail-panel" id="detailPanel" style="display:none">
-    <div class="detail-panel-inner">
-      <button class="detail-close" onclick="closeDetailPanel()">✕</button>
-      <div id="detailContent"></div>
-    </div>
-  </div>
-  <div class="detail-overlay" id="detailOverlay" onclick="closeDetailPanel()"></div>
-
-  <div class="toast-container" id="toastContainer"></div>
-
+  <script src="data.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
-  <script src="config.js"></script>
   <script src="map.js"></script>
   <script src="search.js"></script>
-  <script src="import.js"></script>
   <script src="app.js"></script>
 </body>
 </html>
