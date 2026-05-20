@@ -1,23 +1,20 @@
 /**
- * Hlavní app.js – orchestrátor aplikace
- * Nyní plně lokální: pracuje s IndexedDB pro trvalé uložení bez nutnosti serveru.
+ * Hlavní app.js
  */
 
-// ── Globální stav ─────────────────────────────────────────────
 let allPobocky = [];
 let currentView = 'map';
 
-// ── Inicializace ──────────────────────────────────────────────
 document.addEventListener('DOMContentLoaded', () => {
-  initMap();
-  initSearch();
-  // initImport(); // Pokud už nepotřebuješ nahrávání, můžeš zakomentovat
+  // Inicializace modulů
+  if (typeof initMap === 'function') initMap();
+  if (typeof initSearch === 'function') initSearch();
   
-  // Při startu načteme data z lokální DB
+  // Načtení z lokální DB
   nacistUlozenePobocky();
 });
 
-// ── Přepínání pohledů ─────────────────────────────────────────
+// Opravená funkce pro přepínání
 function switchView(view) {
   currentView = view;
   document.querySelectorAll('.nav-btn').forEach(btn => {
@@ -26,64 +23,57 @@ function switchView(view) {
 
   document.getElementById('viewMap').style.display = view === 'map' ? 'flex' : 'none';
   document.getElementById('viewList').style.display = view === 'list' ? 'flex' : 'none';
+  
+  const sidebar = document.querySelector('.sidebar');
+  if(sidebar) sidebar.style.display = (view === 'import') ? 'none' : 'flex';
 
-  document.querySelector('.sidebar').style.display = view === 'map' || view === 'list' ? 'flex' : 'none';
-
-  if (view === 'map' && map) setTimeout(() => map.invalidateSize(), 50);
+  if (view === 'map' && typeof map !== 'undefined' && map) setTimeout(() => map.invalidateSize(), 50);
   if (view === 'list') renderListGrid(allPobocky);
 }
 
-// ── Načtení dat z lokální paměti (IndexedDB) ──────────────────
+// Chybějící funkce renderListGrid
+function renderListGrid(pobocky) {
+  const grid = document.getElementById('listGrid');
+  if (!grid) return;
+
+  if (!pobocky || pobocky.length === 0) {
+    grid.innerHTML = `<div class="empty-state">Žádné pobočky k zobrazení.</div>`;
+    return;
+  }
+
+  grid.innerHTML = pobocky.map((p, i) => `
+    <div class="list-card" onclick="setActiveItem(${i})">
+      <div class="list-card-header">
+        <div class="list-card-num">${i + 1}</div>
+        <div class="list-card-title">${sanitizeHtml(p.nazev || 'Bez názvu')}</div>
+      </div>
+      <div class="list-card-body">
+        <div class="list-card-row">📍 ${sanitizeHtml(p.ulice || '')}, ${sanitizeHtml(p.psc || '')} ${sanitizeHtml(p.mesto || '')}</div>
+        ${p.telefon ? `<div class="list-card-row">📞 ${sanitizeHtml(p.telefon)}</div>` : ''}
+      </div>
+    </div>
+  `).join('');
+}
+
+// Načítání z IndexedDB
 function nacistUlozenePobocky() {
   const request = indexedDB.open("DatabazePobocek", 1);
-  
-  request.onsuccess = function(e) {
+  request.onsuccess = (e) => {
     const db = e.target.result;
     if (!db.objectStoreNames.contains("pobockyStore")) return;
-    
     const tx = db.transaction("pobockyStore", "readonly");
-    const getReq = tx.objectStore("pobockyStore").get("hlavni_data");
-    
-    getReq.onsuccess = function() {
-      if (getReq.result) {
-        zpracujData(getReq.result.list);
-      }
+    tx.objectStore("pobockyStore").get("hlavni_data").onsuccess = (e) => {
+      if (e.target.result) zpracujData(e.target.result.list);
     };
   };
 }
 
-// ── Zpracování dat a render ──────────────────────────────────
-function zpracujData(pobocky, search = '', userLat = null, userLng = null) {
-  // Filtrování podle vyhledávání
-  let vysledky = pobocky;
-  if (search) {
-    const s = search.toLowerCase();
-    vysledky = pobocky.filter(p => 
-      (p.nazev || '').toLowerCase().includes(s) || 
-      (p.mesto || '').toLowerCase().includes(s)
-    );
-  }
-
-  // Řazení podle vzdálenosti
-  if (userLat && userLng) {
-    vysledky.forEach(p => {
-      p.vzdalenost = haversineDistance(userLat, userLng, parseFloat(p.lat), parseFloat(p.lng));
-    });
-    vysledky.sort((a, b) => (a.vzdalenost || 0) - (b.vzdalenost || 0));
-  }
-
-  allPobocky = vysledky;
-
-  // Aktualizace UI
+function zpracujData(pobocky) {
+  allPobocky = pobocky;
   const statsText = document.getElementById('statsText');
-  statsText.textContent = `Celkem ${vysledky.length} poboček`;
-
-  renderSidebarList(vysledky, userLat, userLng);
+  if(statsText) statsText.textContent = `Celkem ${pobocky.length} poboček`;
   
-  if (currentView === 'map') renderMapMarkers(vysledky, userLat, userLng);
-  if (currentView === 'list') renderListGrid(vysledky);
+  if (typeof renderSidebarList === 'function') renderSidebarList(pobocky);
+  if (currentView === 'map' && typeof renderMapMarkers === 'function') renderMapMarkers(pobocky);
+  if (currentView === 'list') renderListGrid(pobocky);
 }
-
-// ── (Zbytek funkcí zůstává dle tvé původní logiky) ───────────
-// Funkce renderSidebarList, renderListGrid, setActiveItem, openDetailPanel 
-// zůstávají beze změn, pouze místo volání API volají zpracujData().
