@@ -87,9 +87,13 @@ function createUserIcon() {
  * Vytvoří HTML obsah popupu pobočky
  */
 function createPopupContent(p, userLat, userLng) {
+  // Převod pro výpočet vzdálenosti v popupu
+  const pLat = parseFloat(p.lat);
+  const pLng = parseFloat(p.lng || p.lon);
+
   let distHtml = '';
-  if (userLat && userLng && p.lat && p.lng) {
-    const dist = Math.round(haversineDistance(userLat, userLng, p.lat, p.lng) * 10) / 10;
+  if (userLat && userLng && !isNaN(pLat) && !isNaN(pLng)) {
+    const dist = Math.round(haversineDistance(userLat, userLng, pLat, pLng) * 10) / 10;
     distHtml = `<div class="popup-distance">📍 ${dist} km od Vás</div>`;
   }
 
@@ -105,7 +109,7 @@ function createPopupContent(p, userLat, userLng) {
           <circle cx="8" cy="6" r="1.5" fill="currentColor"/>
         </svg>
       </span>
-      <span>${p.ulice}, ${p.psc} ${p.mesto}</span>
+      <span>${p.ulice || ''}, ${p.psc || ''} ${p.mesto || ''}</span>
     </div>`);
 
   if (p.telefon) {
@@ -140,13 +144,15 @@ function createPopupContent(p, userLat, userLng) {
       </div>`);
   }
 
-  // OPRAVENO: Správná URL pro Google navigaci
+  // OPRAVENO: Funkční a validní URL odkaz pro Google navigaci
+  const queryAdresa = encodeURIComponent(`${p.ulice || ''}, ${p.psc || ''} ${p.mesto || ''}`);
+  
   return `
     <div class="popup-inner">
-      <div class="popup-nazev">${p.nazev}</div>
+      <div class="popup-nazev">${p.nazev || 'Pobočka'}</div>
       ${rows.join('')}
       ${distHtml}
-      <a href="https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(p.ulice + ', ' + p.psc + ' ' + p.mesto)}"
+      <a href="https://www.google.com/maps/search/?api=1&query=${queryAdresa}"
          target="_blank" class="popup-btn">
         Navigovat →
       </a>
@@ -166,9 +172,17 @@ function renderMapMarkers(pobocky, userLat = null, userLng = null) {
   const bounds = [];
 
   pobocky.forEach((p, i) => {
-    if (!p.lat || !p.lng) return;
+    // ✨ OPRAVA: Převedeme souřadnice z Excelu na desetinná čísla a ošetříme i variantu 'lon'
+    const lat = parseFloat(p.lat);
+    const lng = parseFloat(p.lng || p.lon);
 
-    const marker = L.marker([p.lat, p.lng], {
+    // Pokud řádek v Excelu nemá platné souřadnice, bezpečně ho přeskočíme, aby aplikace nespadla
+    if (isNaN(lat) || isNaN(lng)) {
+      console.warn(`Pobočka na indexu ${i} (${p.nazev || 'bez názvu'}) má neplatné souřadnice:`, p.lat, p.lng);
+      return;
+    }
+
+    const marker = L.marker([lat, lng], {
       icon: createPobockaIcon(i + 1),
       title: p.nazev,
       zIndexOffset: pobocky.length - i,
@@ -185,15 +199,19 @@ function renderMapMarkers(pobocky, userLat = null, userLng = null) {
 
     marker.addTo(map);
     pobockyMarkers.push(marker);
-    bounds.push([p.lat, p.lng]);
+    bounds.push([lat, lng]);
   });
 
   // Přidat uživatelův bod do bounds
   if (userLat && userLng) {
-    bounds.push([userLat, userLng]);
+    const uLat = parseFloat(userLat);
+    const uLng = parseFloat(userLng);
+    if (!isNaN(uLat) && !isNaN(uLng)) {
+      bounds.push([uLat, uLng]);
+    }
   }
 
-  // OPRAVENO: Bezpečné ohraničení mapy, které zabrání pádu Leafletu
+  // Bezpečné ohraničení mapy, které zabrání pádu Leafletu
   if (bounds.length > 0 && bounds.length <= 20) {
     try {
       map.fitBounds(bounds, { padding: [40, 40], maxZoom: 13 });
@@ -212,16 +230,21 @@ function renderMapMarkers(pobocky, userLat = null, userLng = null) {
 function showUserMarker(lat, lng, animate = true) {
   if (!map) initMap();
 
+  const uLat = parseFloat(lat);
+  const uLng = parseFloat(lng);
+
+  if (isNaN(uLat) || isNaN(uLng)) return;
+
   if (userMarker) map.removeLayer(userMarker);
 
-  userMarker = L.marker([lat, lng], {
+  userMarker = L.marker([uLat, uLng], {
     icon: createUserIcon(),
     zIndexOffset: 10000,
     title: 'Vaše poloha',
   }).addTo(map);
 
   if (animate) {
-    map.flyTo([lat, lng], 13, { duration: 1.2 });
+    map.flyTo([uLat, uLng], 13, { duration: 1.2 });
   }
 }
 
@@ -258,5 +281,10 @@ function resetMapView() {
  */
 function flyToPobocka(lat, lng) {
   if (!map) return;
-  map.flyTo([lat, lng], CONFIG.MAP_ZOOM_ON_SELECT, { duration: 1.0 });
+  const pLat = parseFloat(lat);
+  const pLng = parseFloat(lng);
+  
+  if (!isNaN(pLat) && !isNaN(pLng)) {
+    map.flyTo([pLat, pLng], CONFIG.MAP_ZOOM_ON_SELECT, { duration: 1.0 });
+  }
 }
