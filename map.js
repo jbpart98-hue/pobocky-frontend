@@ -144,7 +144,7 @@ function createPopupContent(p, userLat, userLng) {
       </div>`);
   }
 
-  // OPRAVENO: Validní vyhledávací odkaz pro Google Mapy (?q= místo /0)
+  // OPRAVENO: Validní odkaz na Google Mapy
   const queryAdresa = encodeURIComponent(`${p.ulice || ''}, ${p.psc || ''} ${p.mesto || ''}`);
   
   return `
@@ -169,15 +169,10 @@ function renderMapMarkers(pobocky, userLat = null, userLng = null) {
   pobockyMarkers.forEach(m => map.removeLayer(m));
   pobockyMarkers = [];
 
-  const bounds = [];
+  const allBounds = [];
+  const zoomBounds = []; // ✨ NOVÉ: Sem si odložíme body jen pro nastavení prvotního detailního výřezu
 
-  // ✨ UPRAVENO: Pokud uživatel zadal adresu (máme userLat/Lng), 
-  // omezíme zobrazení na mapě na 3 nejbližší pobočky. Jinak ukážeme všechny.
-  const zobrazenyPobocky = (userLat && userLng) 
-    ? pobocky.slice(0, 3) 
-    : pobocky;
-
-  zobrazenyPobocky.forEach((p, i) => {
+  pobocky.forEach((p, i) => {
     // Převedeme souřadnice z Excelu na desetinná čísla a ošetříme i variantu 'lon'
     const lat = parseFloat(p.lat);
     const lng = parseFloat(p.lng || p.lon);
@@ -191,7 +186,7 @@ function renderMapMarkers(pobocky, userLat = null, userLng = null) {
     const marker = L.marker([lat, lng], {
       icon: createPobockaIcon(i + 1),
       title: p.nazev,
-      zIndexOffset: zobrazenyPobocky.length - i,
+      zIndexOffset: pobocky.length - i,
     });
 
     marker.bindPopup(createPopupContent(p, userLat, userLng), {
@@ -205,23 +200,39 @@ function renderMapMarkers(pobocky, userLat = null, userLng = null) {
 
     marker.addTo(map);
     pobockyMarkers.push(marker);
-    bounds.push([lat, lng]);
+    
+    // Uložíme do celkového pole souřadnic (pro případ zobrazení celé ČR)
+    allBounds.push([lat, lng]);
+
+    // ✨ NOVÉ: Pokud vyhledáváme podle polohy, vezmeme do detailního výřezu POUZE 1. (nejbližší) pobočku
+    if (userLat && userLng && zoomBounds.length === 0) {
+      zoomBounds.push([lat, lng]);
+    }
   });
 
-  // Přidat uživatelův bod do bounds
+  // Přidat uživatelův bod do bounds a zoomBounds
   if (userLat && userLng) {
     const uLat = parseFloat(userLat);
     const uLng = parseFloat(userLng);
     if (!isNaN(uLat) && !isNaN(uLng)) {
-      bounds.push([uLat, uLng]);
+      allBounds.push([uLat, uLng]);
+      zoomBounds.push([uLat, uLng]); // Přidáme i do výřezu k nejbližší pobočce
     }
   }
 
-  // Zafixování pohledu mapy na ohraničený okruh (buď 3 pobočky + uživatel, nebo celá ČR)
-  if (bounds.length > 0 && bounds.length <= 500) {
+  // ✨ ÚPRAVA: Logika dynamického přiblížení mapy
+  if (userLat && userLng && zoomBounds.length > 0) {
     try {
-      // Padding zajistí, aby markery nebyly nalepené na úplném okraji mapy
-      map.fitBounds(bounds, { padding: [50, 50], maxZoom: 13 });
+      // Pokud uživatel vyhledává, zaměříme se těsně na okruh: uživatel + 1 nejbližší pobočka
+      // Všechny ostatní pobočky na mapě zůstávají vykreslené, stačí odzoomovat!
+      map.fitBounds(zoomBounds, { padding: [80, 80], maxZoom: 13 });
+    } catch (e) {
+      resetMapView();
+    }
+  } else if (allBounds.length > 0 && allBounds.length <= 500) {
+    try {
+      // Výchozí stav (všechny pobočky po startu nebo po resetu vyhledávání)
+      map.fitBounds(allBounds, { padding: [40, 40], maxZoom: 13 });
     } catch (e) {
       resetMapView();
     }
@@ -249,7 +260,8 @@ function showUserMarker(lat, lng, animate = true) {
     title: 'Vaše poloha',
   }).addTo(map);
 
-  if (animate) {
+  // Animate vypnuto, pokud fitBounds ve stejném kroku mění výřez, aby se to netlouklo
+  if (animate && !currentUserLat) {
     map.flyTo([uLat, uLng], 13, { duration: 1.2 });
   }
 }
