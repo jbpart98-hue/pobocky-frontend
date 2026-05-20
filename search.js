@@ -21,7 +21,8 @@ function initSearch() {
 
   input.addEventListener('input', (e) => {
     const val = e.target.value.trim();
-    document.getElementById('clearSearch').style.display = val ? 'block' : 'none';
+    const clearBtn = document.getElementById('clearSearch');
+    if (clearBtn) clearBtn.style.display = val ? 'block' : 'none';
 
     // Debounced search (načítání/filtrování poboček)
     clearTimeout(searchDebounceTimer);
@@ -153,6 +154,7 @@ function updateAutocompleteActive() {
  */
 function selectAutocompleteItem(item) {
   const input = document.getElementById('searchInput');
+  const clearBtn = document.getElementById('clearSearch');
   document.getElementById('autocomplete').style.display = 'none';
 
   if (item && item.lat && item.lng) {
@@ -167,6 +169,7 @@ function selectAutocompleteItem(item) {
     // Zkrátit název do políčka (např. jen Název ulice a číslo)
     const shortName = item.display_name.split(',')[0];
     input.value = shortName;
+    if (clearBtn) clearBtn.style.display = 'block';
 
     // Znovu načteme pobočky, předáme jim polohu uživatele, aby se seřadily podle vzdálenosti
     if (typeof loadPobocky === 'function') {
@@ -182,6 +185,7 @@ function selectAutocompleteItem(item) {
  */
 function getUserLocation() {
   const btn = document.getElementById('geoBtn');
+  const clearBtn = document.getElementById('clearSearch');
   if (!btn) return;
 
   if (!navigator.geolocation) {
@@ -209,6 +213,7 @@ function getUserLocation() {
         loadPobocky('', latitude, longitude);
       }
 
+      if (clearBtn) clearBtn.style.display = 'block';
       btn.disabled = false;
       btn.innerHTML = `
         <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
@@ -243,27 +248,47 @@ function getUserLocation() {
 }
 
 /**
- * Vymaže vyhledávání
+ * Vymaže vyhledávání a kompletně resetuje aplikaci do výchozího stavu
  */
 function clearSearch() {
-  // 1. Vymaže text ve vyhledávacím inputu (případně uprav ID podle tvého HTML)
+  // 1. Vymaže text ve vyhledávacím inputu
   const searchInput = document.getElementById('searchInput') || document.getElementById('search-input');
   if (searchInput) searchInput.value = '';
 
-  // 2. Vynulujeme globální souřadnice uživatele, pokud si je aplikace držela
-  if (typeof currentUserLat !== 'undefined') currentUserLat = null;
-  if (typeof currentUserLng !== 'undefined') currentUserLng = null;
+  // 2. Schová křížek pro smazání vyhledávání
+  const clearBtn = document.getElementById('clearSearch');
+  if (clearBtn) clearBtn.style.display = 'none';
 
-  // 3. Smažeme marker uživatele z mapy, pokud existuje
+  // 3. Vynulujeme globální souřadnice uživatele
+  currentUserLat = null;
+  currentUserLng = null;
+
+  // 4. Smažeme marker uživatele z mapy, pokud existuje
   if (userMarker && map) {
     map.removeLayer(userMarker);
     userMarker = null;
   }
 
-  // 4. ✨ KLÍČOVÉ: Načteme znovu čistý seznam poboček bez filtrů a polohy
-  loadPobocky('', null, null);
+  // 5. Resetujeme vzhled geolokačního tlačítka do původního stavu
+  const geoBtn = document.getElementById('geoBtn');
+  if (geoBtn) {
+    geoBtn.style.color = '';
+    geoBtn.innerHTML = `
+      <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+        <circle cx="8" cy="8" r="3" fill="currentColor"/>
+        <path d="M8 1v2M8 13v2M1 8h2M13 8h2" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+        <circle cx="8" cy="8" r="6" stroke="currentColor" stroke-width="1.5"/>
+      </svg>
+      Použít mou polohu
+    `;
+  }
 
-  // 5. ✨ KLÍČOVÉ: Vrátíme mapu zpět do pohledu na celou ČR
+  // 6. Načteme znovu čistý seznam VŠECH poboček bez jakýchkoliv filtrů a polohy
+  if (typeof loadPobocky === 'function') {
+    loadPobocky('', null, null);
+  }
+
+  // 7. Vrátíme mapu zpět do pohledu na celou ČR
   if (typeof resetMapView === 'function') {
     resetMapView();
   }
