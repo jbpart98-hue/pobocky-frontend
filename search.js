@@ -73,7 +73,9 @@ function initSearch() {
  */
 async function fetchAutocomplete(query) {
   try {
-    const res = await fetch(`${CONFIG.API_BASE}/api/geocode/autocomplete?q=${encodeURIComponent(query)}`);
+    const res = await fetch(`${CONFIG.API_BASE}/api/geocode/autocomplete?q=${encodeURIComponent(query)}`, {
+      headers: { 'x-api-key': CONFIG.API_KEY }
+    });
     const data = await res.json();
 
     if (data.success && data.results && data.results.length > 0) {
