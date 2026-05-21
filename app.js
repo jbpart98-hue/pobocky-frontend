@@ -1,23 +1,58 @@
+/**
+ * app.js - Katalogová verze
+ * Data jsou načítána ze souboru data.js
+ */
+
 document.addEventListener('DOMContentLoaded', () => {
+    console.log("App.js: Spouštím aplikaci...");
+
     const listGrid = document.getElementById('listGrid');
-    
-    // Test 1: Existuje vůbec prvek listGrid v HTML?
-    if (!listGrid) {
-        document.body.innerHTML += '<h1 style="color:red">CHYBA: V HTML chybí <div id="listGrid"></div></h1>';
-        return;
-    }
+    const searchInput = document.getElementById('searchInput');
+    const statsText = document.getElementById('statsText');
 
-    // Test 2: Existují data?
+    // 1. Kontrola, zda data existují
     if (typeof DATA_POBOCEK === 'undefined') {
-        listGrid.innerHTML = '<h1 style="color:red">CHYBA: DATA_POBOCEK nebyla definována!</h1>';
+        console.error("CHYBA: DATA_POBOCEK nebyla nalezena.");
+        if (listGrid) listGrid.innerHTML = '<p>Chyba: Data nebyla načtena.</p>';
         return;
     }
 
-    // Test 3: Vykreslení (zkusíme jen první 3 pro test)
-    console.log("Vykresluji...");
-    listGrid.innerHTML = "<h1>Data jsou načtena!</h1>" + DATA_POBOCEK.map(p => `
-        <div style="border: 1px solid black; margin: 5px; padding: 10px;">
-            <h3>${p.nazev}</h3>
-        </div>
-    `).join('');
+    // 2. Funkce pro vykreslení seznamu
+    function renderList(data) {
+        if (!listGrid) return;
+        
+        if (data.length === 0) {
+            listGrid.innerHTML = '<p>Žádné pobočky neodpovídají vyhledávání.</p>';
+            if (statsText) statsText.textContent = 'Nalezeno 0 poboček';
+            return;
+        }
+
+        // Vykreslení karet pomocí datových klíčů s diakritikou
+        listGrid.innerHTML = data.map(p => `
+            <div class="list-card">
+                <h3>${p.Název || 'Bez názvu'}</h3>
+                <p>📍 ${p.Ulice || ''}, ${p.Město || ''}</p>
+                <p>📦 PSČ: ${p.PSČ || 'N/A'}</p>
+            </div>
+        `).join('');
+
+        if (statsText) statsText.textContent = `Celkem ${data.length} poboček`;
+    }
+
+    // 3. Živé vyhledávání
+    if (searchInput) {
+        searchInput.addEventListener('input', (e) => {
+            const query = e.target.value.toLowerCase();
+            const filtered = DATA_POBOCEK.filter(p => 
+                (p.Název && p.Název.toLowerCase().includes(query)) || 
+                (p.Město && p.Město.toLowerCase().includes(query)) ||
+                (p.Ulice && p.Ulice.toLowerCase().includes(query))
+            );
+            renderList(filtered);
+        });
+    }
+
+    // 4. První vykreslení při načtení stránky
+    renderList(DATA_POBOCEK);
+    console.log("App.js: Vykresleno " + DATA_POBOCEK.length + " poboček.");
 });
