@@ -1,8 +1,3 @@
-/**
- * app.js - Katalogová verze
- * Data jsou načítána ze souboru data.js
- */
-
 document.addEventListener('DOMContentLoaded', () => {
     console.log("App.js: Spouštím aplikaci...");
 
@@ -10,24 +5,18 @@ document.addEventListener('DOMContentLoaded', () => {
     const searchInput = document.getElementById('searchInput');
     const statsText = document.getElementById('statsText');
 
-    // 1. Kontrola, zda data existují
-    if (typeof DATA_POBOCEK === 'undefined') {
-        console.error("CHYBA: DATA_POBOCEK nebyla nalezena.");
-        if (listGrid) listGrid.innerHTML = '<p>Chyba: Data nebyla načtena.</p>';
-        return;
-    }
+    // 1. Inicializace mapy (střed ČR)
+    // Pokud nemáš v index.html div id="map", tohle vyhodí chybu!
+    const map = L.map('map').setView([49.8, 15.5], 7);
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        attribution: '© OpenStreetMap'
+    }).addTo(map);
 
-    // 2. Funkce pro vykreslení seznamu
+    // 2. Vykreslení
     function renderList(data) {
         if (!listGrid) return;
         
-        if (data.length === 0) {
-            listGrid.innerHTML = '<p>Žádné pobočky neodpovídají vyhledávání.</p>';
-            if (statsText) statsText.textContent = 'Nalezeno 0 poboček';
-            return;
-        }
-
-        // Vykreslení karet pomocí datových klíčů s diakritikou
+        // Vypsání seznamu
         listGrid.innerHTML = data.map(p => `
             <div class="list-card">
                 <h3>${p.Název || 'Bez názvu'}</h3>
@@ -37,22 +26,21 @@ document.addEventListener('DOMContentLoaded', () => {
         `).join('');
 
         if (statsText) statsText.textContent = `Celkem ${data.length} poboček`;
+        
+        // Poznámka k mapě: Markery se vykreslí až po doplnění souřadnic (p.lat, p.lon)
     }
 
-    // 3. Živé vyhledávání
+    // 3. Vyhledávání
     if (searchInput) {
         searchInput.addEventListener('input', (e) => {
             const query = e.target.value.toLowerCase();
             const filtered = DATA_POBOCEK.filter(p => 
                 (p.Název && p.Název.toLowerCase().includes(query)) || 
-                (p.Město && p.Město.toLowerCase().includes(query)) ||
-                (p.Ulice && p.Ulice.toLowerCase().includes(query))
+                (p.Město && p.Město.toLowerCase().includes(query))
             );
             renderList(filtered);
         });
     }
 
-    // 4. První vykreslení při načtení stránky
     renderList(DATA_POBOCEK);
-    console.log("App.js: Vykresleno " + DATA_POBOCEK.length + " poboček.");
 });
