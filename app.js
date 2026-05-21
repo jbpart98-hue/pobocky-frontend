@@ -1,45 +1,92 @@
-document.addEventListener('DOMContentLoaded', async () => {
-    const listGrid = document.getElementById('listGrid');
-    const statsText = document.getElementById('statsText');
-    const searchInput = document.getElementById('searchInput');
+/**
+ * Hlavní app.js – orchestrátor aplikace
+ */
 
-    // 1. Načtení dat z tvého backendu
-    const response = await fetch('/api/pobocky');
-    const data = await response.json();
-    let pobocky = data.pobocky || [];
+// ── Globální stav ─────────────────────────────────────────────
+let allPobocky = [];
+let currentView = 'map';
 
-    // 2. Vykreslení
-    renderList(pobocky);
-
-    // 3. Našeptávání a vyhledávání
-    searchInput.addEventListener('input', async (e) => {
-        const query = e.target.value;
-        if (query.length > 2) {
-            // Volání tvého geocoding endpointu
-            const geoRes = await fetch(`/api/geocode?q=${encodeURIComponent(query)}`);
-            const geo = await geoRes.json();
-            
-            // Logika seřazení by se teď měla dít na základě geo.lat/lng
-            // Pro jednoduchost teď filtrujeme podle textu
-            const filtered = pobocky.filter(p => p.mesto.toLowerCase().includes(query.toLowerCase()));
-            renderList(filtered);
-        } else {
-            renderList(pobocky);
-        }
-    });
+// ── Inicializace ──────────────────────────────────────────────
+document.addEventListener('DOMContentLoaded', () => {
+  initMap();
+  initSearch();
+  initImport();
+  loadPobocky();
 });
 
-function renderList(data) {
-    const listGrid = document.getElementById('listGrid');
-    const statsText = document.getElementById('statsText');
+// ── Načítání dat ──────────────────────────────────────────────
+async function loadPobocky() {
+  try {
+    // Používá CONFIG.API_BASE z config.js
+    const response = await fetch(`${CONFIG.API_BASE}/api/pobocky`);
+    const data = await response.json();
+    allPobocky = data.pobocky || [];
     
-    statsText.textContent = `Nalezeno ${data.length} poboček`;
-    
-    listGrid.innerHTML = data.map(p => `
-        <div class="list-card">
-            <h3>${p.nazev}</h3>
-            <p>📍 ${p.ulice}, ${p.mesto}</p>
-            <p>📦 ${p.psc}</p>
-        </div>
-    `).join('');
+    // Inicializace pohledů po načtení
+    renderMapMarkers(allPobocky);
+    renderListGrid(allPobocky);
+  } catch (err) {
+    console.error('[App] Chyba při načítání dat:', err);
+  }
 }
+
+// ── Přepínání pohledů ─────────────────────────────────────────
+function switchView(view) {
+  currentView = view;
+
+  // Navigační tlačítka
+  document.querySelectorAll('.nav-btn').forEach(btn => {
+    btn.classList.toggle('active', btn.dataset.view === view);
+  });
+
+  // Přepínání sekcí
+  document.getElementById('viewMap').style.display = view === 'map' ? 'flex' : 'none';
+  document.getElementById('viewList').style.display = view === 'list' ? 'flex' : 'none';
+  document.getElementById('viewImport').style.display = view === 'import' ? 'flex' : 'none';
+
+  document.querySelector('.sidebar').style.display = view === 'import' ? 'none' : 'flex';
+
+  if (view === 'map' && map) {
+    setTimeout(() => map.invalidateSize(), 50);
+  }
+}
+
+// ── Interakce s pobočkami ─────────────────────────────────────
+function setActiveItem(index) {
+  const pobocka = allPobocky[index];
+  if (!pobocka) return;
+
+  // Zvýraznění v sidebaru
+  document.querySelectorAll('.pobocka-item').forEach((el, i) => {
+    el.classList.toggle('active', i === index);
+  });
+
+  const activeEl = document.querySelector(`.pobocka-item[data-index="${index}"]`);
+  if (activeEl) activeEl.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+
+  // Akce podle pohledu
+  if (currentView === 'map') {
+    highlightMarker(index);
+    if (pobocka.lat && (pobocka.lng || pobocka.lon)) {
+      flyToPobocka(pobocka.lat, pobocka.lng || pobocka.lon);
+    }
+  } else {
+    switchView('map');
+    setTimeout(() => highlightMarker(index), 150);
+  }
+}
+
+// ── Vykreslování seznamu ──────────────────────────────────────
+function renderListGrid(pobocky) {
+  const container = document.getElementById('listGrid');
+  container.innerHTML = pobocky.map((p, i) => `
+    <div class="pobocka-item" data-index="${i}" onclick="setActiveItem(${i})">
+      <h3>${p.nazev}</h3>
+      <p>${p.ulice}, ${p.mesto}</p>
+    </div>
+  `).join('');
+}
+
+// ── Placeholder pro inicializační funkce ──────────────────────
+function initSearch() { /* Logika vyhledávání */ }
+function initImport() { /* Logika importu Excelu */ }
