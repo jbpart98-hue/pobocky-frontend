@@ -1,19 +1,53 @@
 // frontend/js/app.js
 
 let allPobocky = [];
-let currentPobocky = []; // Pobočky aktuálně zobrazené
+let currentPobocky = [];
 
 document.addEventListener('DOMContentLoaded', () => {
     initMap();
     initSearch();
     
-    // Načteme data přímo z proměnné, ne z API
-    allPobocky = DATA_POBOCEK.map(p => ({ ...p })); // Vytvoříme kopii
+    // Načteme data přímo z proměnné
+    allPobocky = DATA_POBOCEK.map(p => ({ ...p }));
     currentPobocky = [...allPobocky];
 
     updateSidebar(currentPobocky);
     renderMapMarkers(currentPobocky);
 });
+
+// Filtruje a vykreslí pobočky jen podle textového dotazu
+function filterPobockyByText(query) {
+    const lowerQuery = query.toLowerCase().trim();
+    if (!lowerQuery) {
+        currentPobocky = [...allPobocky];
+    } else {
+        currentPobocky = allPobocky.filter(p => {
+            const psc = p['PSČ'] || '';
+            const mesto = (p['Město'] || '').toLowerCase();
+            const ulice = (p['Ulice'] || '').toLowerCase();
+            const nazev = (p['Název'] || '').toLowerCase();
+            return psc.includes(lowerQuery) || mesto.includes(lowerQuery) || ulice.includes(lowerQuery) || nazev.includes(lowerQuery);
+        });
+    }
+    // Vzdálenost se v tomto případě nepočítá
+    currentPobocky.forEach(p => delete p.distance);
+
+    updateSidebar(currentPobocky);
+    renderMapMarkers(currentPobocky);
+}
+
+// Seřadí pobočky podle vzdálenosti od daného bodu a vykreslí je
+function filterPobockyByDistance(lat, lon) {
+    currentPobocky = [...allPobocky]; // Začneme se všemi pobočkami
+    currentPobocky.forEach(p => {
+        p.distance = haversineDistance(lat, lon, p.lat, p.lng);
+    });
+    currentPobocky.sort((a, b) => a.distance - b.distance);
+
+    updateSidebar(currentPobocky);
+    renderMapMarkers(currentPobocky);
+}
+
 
 function updateSidebar(pobocky) {
     const listEl = document.getElementById('resultsList');
@@ -51,4 +85,19 @@ function setActiveItem(index) {
     }
 
     highlightMarker(index, pobocka);
+}
+
+// Přesunul jsem `getUserLocation` sem, protože přímo volá filtrování
+async function getUserLocation() {
+    if (!navigator.geolocation) {
+        alert("Geolokace není podporována.");
+        return;
+    }
+
+    navigator.geolocation.getCurrentPosition(position => {
+        const { latitude, longitude } = position.coords;
+        selectAddress(latitude, longitude); // Použijeme stejnou funkci jako pro výběr adresy
+    }, () => {
+        alert("Nepodařilo se zjistit vaši polohu.");
+    });
 }
