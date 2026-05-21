@@ -1,33 +1,38 @@
 <!DOCTYPE html>
 <html lang="cs">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Katalog poboček</title>
-  <link rel="stylesheet" href="app.css" />
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Katalog poboček</title>
+    
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <link rel="stylesheet" href="app.css" />
 </head>
 <body>
 
-  <header class="site-header">
-    <div class="header-inner">
-      <h1>Seznam poboček</h1>
-    </div>
-  </header>
+    <header class="site-header">
+        <div class="header-inner">
+            <h1>Seznam poboček</h1>
+        </div>
+    </header>
 
-  <main class="app-layout">
-    <div class="search-block">
-      <input type="text" id="searchInput" placeholder="Hledat pobočku, město nebo PSČ..." autocomplete="off">
-      <button id="clearSearch" style="display:none">✕</button>
-    </div>
+    <main class="app-layout">
+        <div id="map" style="height: 400px; width: 100%; margin-bottom: 20px;"></div>
 
-    <div class="stats-bar">
-      <span id="statsText">Načítám...</span>
-    </div>
+        <div class="search-block">
+            <input type="text" id="searchInput" placeholder="Hledat pobočku, město nebo PSČ..." autocomplete="off">
+        </div>
 
-    <div class="results-list" id="listGrid"></div>
-  </main>
+        <div class="stats-bar">
+            <span id="statsText">Načítám...</span>
+        </div>
 
-  <script src="data.js"></script>
-  <script src="app.js"></script>
+        <div class="results-list" id="listGrid"></div>
+    </main>
+
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    
+    <script src="data.js"></script>
+    <script src="app.js"></script>
 </body>
 </html>
