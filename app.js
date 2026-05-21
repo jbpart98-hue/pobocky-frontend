@@ -1,92 +1,54 @@
-/**
- * Hlavní app.js – orchestrátor aplikace
- */
+// frontend/js/app.js
 
-// ── Globální stav ─────────────────────────────────────────────
 let allPobocky = [];
-let currentView = 'map';
+let currentPobocky = []; // Pobočky aktuálně zobrazené
 
-// ── Inicializace ──────────────────────────────────────────────
 document.addEventListener('DOMContentLoaded', () => {
-  initMap();
-  initSearch();
-  initImport();
-  loadPobocky();
+    initMap();
+    initSearch();
+    
+    // Načteme data přímo z proměnné, ne z API
+    allPobocky = DATA_POBOCEK.map(p => ({ ...p })); // Vytvoříme kopii
+    currentPobocky = [...allPobocky];
+
+    updateSidebar(currentPobocky);
+    renderMapMarkers(currentPobocky);
 });
 
-// ── Načítání dat ──────────────────────────────────────────────
-async function loadPobocky() {
-  try {
-    // Používá CONFIG.API_BASE z config.js
-    const response = await fetch(`${CONFIG.API_BASE}/api/pobocky`);
-    const data = await response.json();
-    allPobocky = data.pobocky || [];
-    
-    // Inicializace pohledů po načtení
-    renderMapMarkers(allPobocky);
-    renderListGrid(allPobocky);
-  } catch (err) {
-    console.error('[App] Chyba při načítání dat:', err);
-  }
-}
+function updateSidebar(pobocky) {
+    const listEl = document.getElementById('resultsList');
+    const statsEl = document.getElementById('statsBar');
 
-// ── Přepínání pohledů ─────────────────────────────────────────
-function switchView(view) {
-  currentView = view;
-
-  // Navigační tlačítka
-  document.querySelectorAll('.nav-btn').forEach(btn => {
-    btn.classList.toggle('active', btn.dataset.view === view);
-  });
-
-  // Přepínání sekcí
-  document.getElementById('viewMap').style.display = view === 'map' ? 'flex' : 'none';
-  document.getElementById('viewList').style.display = view === 'list' ? 'flex' : 'none';
-  document.getElementById('viewImport').style.display = view === 'import' ? 'flex' : 'none';
-
-  document.querySelector('.sidebar').style.display = view === 'import' ? 'none' : 'flex';
-
-  if (view === 'map' && map) {
-    setTimeout(() => map.invalidateSize(), 50);
-  }
-}
-
-// ── Interakce s pobočkami ─────────────────────────────────────
-function setActiveItem(index) {
-  const pobocka = allPobocky[index];
-  if (!pobocka) return;
-
-  // Zvýraznění v sidebaru
-  document.querySelectorAll('.pobocka-item').forEach((el, i) => {
-    el.classList.toggle('active', i === index);
-  });
-
-  const activeEl = document.querySelector(`.pobocka-item[data-index="${index}"]`);
-  if (activeEl) activeEl.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
-
-  // Akce podle pohledu
-  if (currentView === 'map') {
-    highlightMarker(index);
-    if (pobocka.lat && (pobocka.lng || pobocka.lon)) {
-      flyToPobocka(pobocka.lat, pobocka.lng || pobocka.lon);
+    if (pobocky.length === 0) {
+        listEl.innerHTML = '<div class="empty-state">Žádné pobočky nenalezeny.</div>';
+    } else {
+        listEl.innerHTML = pobocky.map((p, i) => {
+            let distHtml = p.distance ? `<div class="pobocka-distance">${p.distance.toFixed(1)} km</div>` : '';
+            return `
+                <div class="pobocka-item" data-index="${i}" onclick="setActiveItem(${i})">
+                    <div class="pobocka-num">${i + 1}</div>
+                    <div class="pobocka-info">
+                        <div class="pobocka-nazev">${p['Název']}</div>
+                        <div class="pobocka-adresa">${p['Ulice']}, ${p['Město']}</div>
+                    </div>
+                    ${distHtml}
+                </div>
+            `;
+        }).join('');
     }
-  } else {
-    switchView('map');
-    setTimeout(() => highlightMarker(index), 150);
-  }
+    statsEl.textContent = `Zobrazeno ${pobocky.length} z ${allPobocky.length} poboček`;
 }
 
-// ── Vykreslování seznamu ──────────────────────────────────────
-function renderListGrid(pobocky) {
-  const container = document.getElementById('listGrid');
-  container.innerHTML = pobocky.map((p, i) => `
-    <div class="pobocka-item" data-index="${i}" onclick="setActiveItem(${i})">
-      <h3>${p.nazev}</h3>
-      <p>${p.ulice}, ${p.mesto}</p>
-    </div>
-  `).join('');
-}
+function setActiveItem(index) {
+    const pobocka = currentPobocky[index];
+    if (!pobocka) return;
 
-// ── Placeholder pro inicializační funkce ──────────────────────
-function initSearch() { /* Logika vyhledávání */ }
-function initImport() { /* Logika importu Excelu */ }
+    document.querySelectorAll('.pobocka-item').forEach(el => el.classList.remove('active'));
+    const activeEl = document.querySelector(`.pobocka-item[data-index="${index}"]`);
+    if (activeEl) {
+        activeEl.classList.add('active');
+        activeEl.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    }
+
+    highlightMarker(index, pobocka);
+}
