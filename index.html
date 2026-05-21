@@ -1,33 +1,29 @@
 <!DOCTYPE html>
 <html lang="cs">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Katalog poboček</title>
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css" />
-  <link rel="stylesheet" href="css/app.css" />
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mapa Poboček</title>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
+    <link rel="stylesheet" href="css/app.css">
 </head>
 <body>
-
-  <header class="site-header">
-    <h1>Najdi svou pobočku</h1>
-  </header>
-
-  <main class="app-layout">
-    <div class="search-block">
-      <input type="text" id="searchInput" placeholder="Zadej adresu nebo PSČ..." autocomplete="off">
+    <div class="app-layout">
+        <aside class="sidebar">
+            <div class="search-block">
+                <input id="searchInput" type="text" placeholder="Hledat pobočku (město, PSČ)...">
+            </div>
+            <button class="geo-btn" onclick="getUserLocation()">Použít moji polohu</button>
+            <div id="statsBar" class="stats-bar"></div>
+            <div id="resultsList" class="results-list"></div>
+        </aside>
+        <main id="map"></main>
     </div>
 
-    <div id="statsText" class="stats-bar">Načítání poboček...</div>
-    
-    <div id="listGrid"></div>
-    
-    <div id="map" style="height: 500px; width: 100%; margin-top: 30px; border: 1px solid var(--border);"></div>
-  </main>
-
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
-  <script src="config.js"></script>
-  <script src="map.js"></script>
-  <script src="app.js"></script>
+    <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+    <script src="data.js"></script> <!-- DŮLEŽITÉ: Načíst data jako první -->
+    <script src="map.js"></script>
+    <script src="search.js"></script>
+    <script src="app.js"></script>
 </body>
 </html>
