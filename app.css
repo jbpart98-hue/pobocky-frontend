@@ -1,73 +1,112 @@
-/* Základní nastavení */
-:root {
-  --bg: #0e1117;
-  --bg2: #161b24;
-  --text: #e8edf5;
-  --accent: #3d7eff;
-  --border: #2e3a4e;
-}
-
-body {
-  font-family: sans-serif;
-  background: var(--bg);
-  color: var(--text);
-  margin: 0;
-  padding: 0;
-}
-
-.site-header {
-  padding: 20px;
-  background: var(--bg2);
-  border-bottom: 1px solid var(--border);
-  text-align: center;
+/* Základní nastavení a layout */
+body, html {
+    margin: 0;
+    padding: 0;
+    height: 100%;
+    font-family: 'Syne', sans-serif;
+    background-color: #f4f4f4;
+    overflow: hidden; /* Zabráníme skrolování celé stránky */
 }
 
 .app-layout {
-  max-width: 1000px;
-  margin: 20px auto;
-  padding: 0 20px;
+    display: flex;
+    height: 100vh; /* Layout zabere celou výšku okna */
+}
+
+/* Postranní panel (Sidebar) */
+.sidebar {
+    width: 380px;
+    background-color: #ffffff;
+    border-right: 1px solid #e0e0e0;
+    display: flex;
+    flex-direction: column;
+    padding: 20px;
+    box-shadow: 2px 0 5px rgba(0,0,0,0.05);
 }
 
 .search-block {
-  margin-bottom: 20px;
+    margin-bottom: 15px;
 }
 
 #searchInput {
-  width: 100%;
-  padding: 12px;
-  background: var(--bg2);
-  border: 1px solid var(--border);
-  color: white;
-  border-radius: 6px;
+    width: 100%;
+    padding: 10px;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    font-size: 16px;
+    box-sizing: border-box; /* Zajistí, že padding neovlivní šířku */
 }
 
-/* TOTO JE KLÍČOVÁ ČÁST PRO TVŮJ LISTGRID */
-#listGrid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-  gap: 16px;
-  margin-top: 20px;
+.geo-btn {
+    width: 100%;
+    padding: 10px;
+    background-color: #007bff;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    margin-bottom: 15px;
+    font-size: 15px;
 }
 
-.list-card {
-  background: var(--bg2);
-  border: 1px solid var(--border);
-  padding: 16px;
-  border-radius: 8px;
-  transition: transform 0.2s;
-}
-
-.list-card:hover {
-  border-color: var(--accent);
-}
-
-.list-card h3 {
-  margin: 0 0 10px 0;
-  color: var(--accent);
+.geo-btn:hover {
+    background-color: #0056b3;
 }
 
 .stats-bar {
-  margin-bottom: 10px;
-  color: #8fa3bc;
-  font-size: 0.9rem;
+    padding: 10px 0;
+    border-bottom: 1px solid #eee;
+    color: #666;
+    font-size: 14px;
+    margin-bottom: 10px;
+}
+
+.results-list {
+    flex-grow: 1; /* Seznam zabere zbytek volného místa */
+    overflow-y: auto; /* Umožní skrolování, pokud je seznam dlouhý */
+}
+
+.pobocka-item {
+    padding: 15px 10px;
+    border-bottom: 1px solid #f0f0f0;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+}
+
+.pobocka-item:hover {
+    background-color: #f9f9f9;
+}
+
+.pobocka-item.active {
+    background-color: #e6f7ff;
+}
+
+.pobocka-num {
+    font-weight: bold;
+    color: #007bff;
+    margin-right: 15px;
+}
+
+.pobocka-nazev {
+    font-weight: 600;
+    margin-bottom: 3px;
+}
+
+.pobocka-adresa {
+    font-size: 14px;
+    color: #555;
+}
+
+.pobocka-distance {
+    margin-left: auto; /* Odsune vzdálenost na pravou stranu */
+    font-size: 14px;
+    font-weight: bold;
+    color: #333;
+}
+
+/* Hlavní obsah s mapou */
+#map {
+    flex-grow: 1; /* Mapa zabere veškeré zbývající místo vedle sidebar */
+    height: 100%; /* DŮLEŽITÉ: Mapa musí mít 100% výšku svého kontejneru */
 }
