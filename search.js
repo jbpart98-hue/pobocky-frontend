@@ -6,25 +6,29 @@ function initSearch() {
     const searchInput = document.getElementById('searchInput');
     const autocompleteEl = document.getElementById('autocomplete');
 
-    searchInput.addEventListener('input', () => {
-        const query = searchInput.value;
+    searchInput.addEventListener('input', (e) => {
+        const query = e.target.value;
         clearTimeout(debounceTimer);
 
         if (query.length < 3) {
             autocompleteEl.style.display = 'none';
-            filterPobockyByText(query); // Provedeme lokální filtrování poboček
+            filterPobockyByText(query);
             return;
         }
 
-        // Debounce - čekáme 300ms po posledním úhozu
         debounceTimer = setTimeout(() => {
             fetchAddressSuggestions(query);
-        }, 300);
+        }, 350); // Mírně delší prodleva
     });
 
-    // Skrytí návrhů při kliknutí mimo
+    searchInput.addEventListener('focus', () => {
+        if (autocompleteEl.innerHTML !== '') {
+            autocompleteEl.style.display = 'block';
+        }
+    });
+
     document.addEventListener('click', (e) => {
-        if (!searchInput.contains(e.target)) {
+        if (!e.target.closest('.search-block')) {
             autocompleteEl.style.display = 'none';
         }
     });
@@ -32,13 +36,12 @@ function initSearch() {
 
 async function fetchAddressSuggestions(query) {
     const autocompleteEl = document.getElementById('autocomplete');
-    const url = `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(query)}, Czech Republic&format=json&addressdetails=1&limit=5`;
+    const url = `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(query)}&countrycodes=cz&format=json&limit=5`;
 
     try {
-        const response = await fetch(url, { headers: { 'User-Agent': 'PobockyApp/1.0' } });
-        if (!response.ok) {
-            throw new Error('Network response was not ok');
-        }
+        const response = await fetch(url, { headers: { 'Accept': 'application/json' } });
+        if (!response.ok) throw new Error('Nominatim API request failed');
+        
         const suggestions = await response.json();
         displaySuggestions(suggestions);
     } catch (error) {
@@ -49,37 +52,33 @@ async function fetchAddressSuggestions(query) {
 
 function displaySuggestions(suggestions) {
     const autocompleteEl = document.getElementById('autocomplete');
-    if (suggestions.length === 0) {
+    if (!suggestions || suggestions.length === 0) {
         autocompleteEl.style.display = 'none';
         return;
     }
 
     autocompleteEl.innerHTML = suggestions.map(s => `
-        <div class="autocomplete-item" data-lat="${s.lat}" data-lon="${s.lon}" data-name="${s.display_name}">
+        <div class="autocomplete-item" data-lat="${s.lat}" data-lon="${s.lon}">
             ${s.display_name}
         </div>
     `).join('');
 
     autocompleteEl.style.display = 'block';
 
-    // Přidání event listenerů na nové prvky
     document.querySelectorAll('.autocomplete-item').forEach(item => {
         item.addEventListener('click', () => {
             const lat = parseFloat(item.dataset.lat);
             const lon = parseFloat(item.dataset.lon);
-            const name = item.dataset.name;
-
-            document.getElementById('searchInput').value = name;
+            
+            document.getElementById('searchInput').value = item.textContent.trim();
             autocompleteEl.style.display = 'none';
             
-            // Zaměříme mapu a seřadíme pobočky
             selectAddress(lat, lon);
         });
     });
 }
 
 function selectAddress(lat, lon) {
-    // Ukážeme na mapě bod, seřadíme pobočky podle vzdálenosti a přiblížíme mapu
     showUserMarker(lat, lon);
     filterPobockyByDistance(lat, lon);
     map.flyTo([lat, lon], 14);
