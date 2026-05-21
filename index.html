@@ -3,8 +3,10 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Mapa Poboček</title>
+    <title>Mapa Poboček Partners</title>
+    <!-- Externí knihovna pro mapy -->
     <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
+    <!-- Váš hlavní soubor se styly -->
     <link rel="stylesheet" href="css/app.css">
 </head>
 <body>
@@ -20,8 +22,9 @@
         <main id="map"></main>
     </div>
 
+    <!-- Načtení skriptů na konci body pro rychlejší zobrazení stránky -->
     <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
-    <script src="data.js"></script> <!-- DŮLEŽITÉ: Načíst data jako první -->
+    <script src="data.js"></script>
     <script src="map.js"></script>
     <script src="search.js"></script>
     <script src="app.js"></script>
