@@ -4,28 +4,22 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Mapa Poboček Partners</title>
-    <!-- Externí knihovna pro mapy -->
     <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
-    <!-- Cesta k vašemu CSS souboru -->
     <link rel="stylesheet" href="./app.css">
 </head>
 <body>
     <div class="app-layout">
         <aside class="sidebar">
-            
             <div class="search-block">
                 <input id="searchInput" type="text" placeholder="Hledat adresu nebo pobočku...">
                 <div id="autocomplete" class="autocomplete-list"></div>
             </div>
-
             <button class="geo-btn" onclick="getUserLocation()">Použít moji polohu</button>
             <div id="statsBar" class="stats-bar"></div>
             <div id="resultsList" class="results-list"></div>
         </aside>
         <main id="map"></main>
     </div>
-
-    <!-- Načtení skriptů na konci body -->
     <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
     <script src="./data.js"></script>
     <script src="./map.js"></script>
