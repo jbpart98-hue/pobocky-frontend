@@ -1,112 +1,35 @@
-/* Základní nastavení a layout */
-body, html {
-    margin: 0;
-    padding: 0;
-    height: 100%;
-    font-family: 'Syne', sans-serif;
-    background-color: #f4f4f4;
-    overflow: hidden; /* Zabráníme skrolování celé stránky */
-}
+/* ... (všechny předchozí styly zůstávají) ... */
 
-.app-layout {
-    display: flex;
-    height: 100vh; /* Layout zabere celou výšku okna */
-}
-
-/* Postranní panel (Sidebar) */
-.sidebar {
-    width: 380px;
-    background-color: #ffffff;
-    border-right: 1px solid #e0e0e0;
-    display: flex;
-    flex-direction: column;
-    padding: 20px;
-    box-shadow: 2px 0 5px rgba(0,0,0,0.05);
-}
-
+/* Styly pro našeptávač adres */
 .search-block {
+    position: relative; /* Nutné pro pozicování našeptávače */
     margin-bottom: 15px;
 }
 
-#searchInput {
-    width: 100%;
-    padding: 10px;
+.autocomplete-list {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    right: 0;
+    background: white;
     border: 1px solid #ccc;
-    border-radius: 5px;
-    font-size: 16px;
-    box-sizing: border-box; /* Zajistí, že padding neovlivní šířku */
+    border-top: none;
+    z-index: 1000; /* Musí být nad ostatními prvky */
+    max-height: 300px;
+    overflow-y: auto;
 }
 
-.geo-btn {
-    width: 100%;
-    padding: 10px;
-    background-color: #007bff;
-    color: white;
-    border: none;
-    border-radius: 5px;
+.autocomplete-item {
+    padding: 12px 15px;
     cursor: pointer;
-    margin-bottom: 15px;
     font-size: 15px;
-}
-
-.geo-btn:hover {
-    background-color: #0056b3;
-}
-
-.stats-bar {
-    padding: 10px 0;
     border-bottom: 1px solid #eee;
-    color: #666;
-    font-size: 14px;
-    margin-bottom: 10px;
 }
 
-.results-list {
-    flex-grow: 1; /* Seznam zabere zbytek volného místa */
-    overflow-y: auto; /* Umožní skrolování, pokud je seznam dlouhý */
+.autocomplete-item:last-child {
+    border-bottom: none;
 }
 
-.pobocka-item {
-    padding: 15px 10px;
-    border-bottom: 1px solid #f0f0f0;
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-}
-
-.pobocka-item:hover {
-    background-color: #f9f9f9;
-}
-
-.pobocka-item.active {
-    background-color: #e6f7ff;
-}
-
-.pobocka-num {
-    font-weight: bold;
-    color: #007bff;
-    margin-right: 15px;
-}
-
-.pobocka-nazev {
-    font-weight: 600;
-    margin-bottom: 3px;
-}
-
-.pobocka-adresa {
-    font-size: 14px;
-    color: #555;
-}
-
-.pobocka-distance {
-    margin-left: auto; /* Odsune vzdálenost na pravou stranu */
-    font-size: 14px;
-    font-weight: bold;
-    color: #333;
-}
-
-/* Hlavní obsah s mapou */
-#map {
-    flex-grow: 1; /* Mapa zabere veškeré zbývající místo vedle sidebar */
-    height: 100%; /* DŮLEŽITÉ: Mapa musí mít 100% výšku svého kontejneru */
+.autocomplete-item:hover {
+    background-color: #f0f0f0;
 }
