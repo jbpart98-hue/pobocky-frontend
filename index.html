@@ -1,34 +1,32 @@
 <!DOCTYPE html>
 <html lang="cs">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Katalog poboček</title>
-    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
-    <link rel="stylesheet" href="app.css">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Katalog poboček</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css" />
+  <link rel="stylesheet" href="css/app.css" />
 </head>
 <body>
-    <header class="site-header">
-        <div class="header-inner">
-            <h1>Seznam poboček</h1>
-        </div>
-    </header>
 
-    <main class="app-layout">
-        <div class="sidebar">
-            <div class="search-block">
-                <input type="text" id="searchInput" placeholder="Hledat adresu...">
-            </div>
-            <div id="statsText" class="stats-bar">Načítám...</div>
-            <div id="listGrid" class="results-list"></div>
-        </div>
-        <div class="map-section">
-            <div id="map"></div>
-        </div>
-    </main>
+  <header class="site-header">
+    <h1>Najdi svou pobočku</h1>
+  </header>
 
-    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-    <script src="data.js"></script>
-    <script src="app.js"></script>
+  <main class="app-layout">
+    <div class="search-block">
+      <input type="text" id="searchInput" placeholder="Zadej adresu nebo PSČ..." autocomplete="off">
+    </div>
+
+    <div id="statsText" class="stats-bar">Načítání poboček...</div>
+    
+    <div id="listGrid"></div>
+    
+    <div id="map" style="height: 500px; width: 100%; margin-top: 30px; border: 1px solid var(--border);"></div>
+  </main>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js"></script>
+  <script src="js/config.js"></script>
+  <script src="app.js"></script>
 </body>
 </html>
