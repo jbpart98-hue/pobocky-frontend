@@ -6,17 +6,15 @@
     <title>Mapa Poboček Partners</title>
     <!-- Externí knihovna pro mapy -->
     <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
-    <!-- Váš hlavní soubor se styly -->
-    <link rel="stylesheet" href="app.css">
+    <!-- Cesta k vašemu CSS souboru -->
+    <link rel="stylesheet" href="./app.css">
 </head>
 <body>
     <div class="app-layout">
         <aside class="sidebar">
             
-            <!-- Vyhledávací blok nyní obsahuje i prvek pro našeptávač -->
             <div class="search-block">
                 <input id="searchInput" type="text" placeholder="Hledat adresu nebo pobočku...">
-                <!-- TOTO JE TEN CHYBĚJÍCÍ PRVEK -->
                 <div id="autocomplete" class="autocomplete-list"></div>
             </div>
 
@@ -29,9 +27,9 @@
 
     <!-- Načtení skriptů na konci body -->
     <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
-    <script src="data.js"></script>
-    <script src="map.js"></script>
-    <script src="search.js"></script>
-    <script src="app.js"></script>
+    <script src="./data.js"></script>
+    <script src="./map.js"></script>
+    <script src="./search.js"></script>
+    <script src="./app.js"></script>
 </body>
 </html>
