@@ -589,5 +589,4 @@ const DATA_POBOCEK = [
     "ID": "123857", "Název": "PM Střelec s.r.o.", "Ulice": "Stojanova 1336", "PSČ": "68601", "Město": "Uherské Hradiště",
     "lat": 49.0664, "lng": 17.4682
   },
-  {
-   
+]
