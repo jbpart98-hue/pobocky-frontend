@@ -11,16 +11,24 @@ function initMap() {
     }).addTo(map);
 }
 
-function renderMapMarkers(pobocky, userLat = null, userLng = null) {
+function renderMapMarkers(pobocky) {
     pobockyMarkers.forEach(marker => marker.remove());
     pobockyMarkers = [];
 
     pobocky.forEach((p, index) => {
         if (!p.lat || !p.lng) return;
 
+        const googleMapsUrl = `https://www.google.com/maps/dir/?api=1&destination=${p.lat},${p.lng}`;
+        
+        const popupContent = `
+            <b>${p['Název']}</b><br>
+            ${p['Ulice']}, ${p['Město']}<br><br>
+            <a href="${googleMapsUrl}" target="_blank">Navigovat na Google Maps</a>
+        `;
+
         const marker = L.marker([p.lat, p.lng])
             .addTo(map)
-            .bindPopup(`<b>${p['Název']}</b><br>${p['Ulice']}, ${p['Město']}`);
+            .bindPopup(popupContent);
         
         marker.on('click', () => setActiveItem(index));
         pobockyMarkers.push(marker);
@@ -29,21 +37,28 @@ function renderMapMarkers(pobocky, userLat = null, userLng = null) {
 
 function highlightMarker(index, pobocka) {
     if (pobocka && pobocka.lat && pobocka.lng) {
-        map.flyTo([pobocka.lat, pobocka.lng], 14);
+        map.flyTo([pobocka.lat, pobocka.lng], 15); // Větší přiblížení
         if (pobockyMarkers[index]) {
-            pobockyMarkers[index].openPopup();
+            // Otevření pop-upu s mírným zpožděním, aby se stihla animace mapy
+            setTimeout(() => {
+                pobockyMarkers[index].openPopup();
+            }, 400);
         }
     }
 }
 
 function showUserMarker(lat, lng) {
-    if (userMarker) userMarker.remove();
-    userMarker = L.circleMarker([lat, lng], {
-        radius: 8,
-        color: '#2596be',
-        fillColor: '#2596be',
-        fillOpacity: 1
-    }).addTo(map).bindPopup("Vaše poloha").openPopup();
+    if (userMarker) {
+        userMarker.setLatLng([lat, lng]);
+    } else {
+        userMarker = L.circleMarker([lat, lng], {
+            radius: 8,
+            color: '#2596be',
+            fillColor: '#2596be',
+            fillOpacity: 1
+        }).addTo(map);
+    }
+    userMarker.bindPopup("Vámi hledaná poloha").openPopup();
 }
 
 function haversineDistance(lat1, lon1, lat2, lon2) {
