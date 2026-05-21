@@ -1,58 +1,23 @@
-/**
- * app.js - Katalogová verze
- * Všechna data jsou uložena lokálně v souboru data.js
- */
-
 document.addEventListener('DOMContentLoaded', () => {
-    console.log("App.js: Startuji načítání aplikace...");
-
     const listGrid = document.getElementById('listGrid');
-    const searchInput = document.getElementById('searchInput');
-    const statsText = document.getElementById('statsText');
-
-    // 1. Kontrola, zda data existují
-    if (typeof DATA_POBOCEK === 'undefined') {
-        console.error("CHYBA: Proměnná DATA_POBOCEK nebyla nalezena. Zkontroluj, zda je data.js správně načten.");
-        if (listGrid) listGrid.innerHTML = '<p>Chyba: Data nebyla načtena.</p>';
+    
+    // Test 1: Existuje vůbec prvek listGrid v HTML?
+    if (!listGrid) {
+        document.body.innerHTML += '<h1 style="color:red">CHYBA: V HTML chybí <div id="listGrid"></div></h1>';
         return;
     }
 
-    // 2. Hlavní funkce pro vykreslení
-    function renderList(data) {
-        if (!listGrid) return;
-        
-        if (data.length === 0) {
-            listGrid.innerHTML = '<p>Žádné pobočky neodpovídají vyhledávání.</p>';
-            statsText.textContent = 'Nalezeno 0 poboček';
-            return;
-        }
-
-        // Vykreslení seznamu
-        listGrid.innerHTML = data.map(p => `
-            <div class="list-card">
-                <h3>${p.nazev || 'Bez názvu'}</h3>
-                <p>📍 ${p.ulice || ''}, ${p.mesto || ''}</p>
-                ${p.telefon ? `<p>📞 ${p.telefon}</p>` : ''}
-            </div>
-        `).join('');
-
-        statsText.textContent = `Celkem ${data.length} poboček`;
+    // Test 2: Existují data?
+    if (typeof DATA_POBOCEK === 'undefined') {
+        listGrid.innerHTML = '<h1 style="color:red">CHYBA: DATA_POBOCEK nebyla definována!</h1>';
+        return;
     }
 
-    // 3. Vyhledávání (živý filtr)
-    if (searchInput) {
-        searchInput.addEventListener('input', (e) => {
-            const query = e.target.value.toLowerCase();
-            const filtered = DATA_POBOCEK.filter(p => 
-                (p.nazev && p.nazev.toLowerCase().includes(query)) || 
-                (p.mesto && p.mesto.toLowerCase().includes(query)) ||
-                (p.ulice && p.ulice.toLowerCase().includes(query))
-            );
-            renderList(filtered);
-        });
-    }
-
-    // 4. První vykreslení při startu
-    renderList(DATA_POBOCEK);
-    console.log("App.js: Úspěšně vykresleno " + DATA_POBOCEK.length + " poboček.");
+    // Test 3: Vykreslení (zkusíme jen první 3 pro test)
+    console.log("Vykresluji...");
+    listGrid.innerHTML = "<h1>Data jsou načtena!</h1>" + DATA_POBOCEK.map(p => `
+        <div style="border: 1px solid black; margin: 5px; padding: 10px;">
+            <h3>${p.nazev}</h3>
+        </div>
+    `).join('');
 });
