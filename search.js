@@ -10,7 +10,7 @@ function initSearch() {
         const query = e.target.value;
         clearTimeout(debounceTimer);
 
-        // Zobrazí nebo skryje "X" tlačítko podle toho, zda je v poli text
+        // Zobrazí nebo skryje "X" tlačítko
         if (clearBtn) {
             clearBtn.style.display = query.length > 0 ? 'block' : 'none';
         }
@@ -22,7 +22,7 @@ function initSearch() {
             return;
         }
 
-        // Počkáme 350ms po posledním úhozu a pak zavoláme našeptávač
+        // Počkáme 350ms a pak zavoláme našeptávač
         debounceTimer = setTimeout(() => {
             fetchAddressSuggestions(query);
         }, 350);
@@ -35,19 +35,22 @@ function initSearch() {
             clearBtn.style.display = 'none';
             if (autocompleteEl) autocompleteEl.style.display = 'none';
             
+            // Vymažeme uloženou polohu
+            userSearchedLocation = null; 
+            
             filterPobockyByText(''); // Obnoví seznam na všechny pobočky
             
-            // Odstraní modrý ukazatel z mapy, pokud existuje
+            // Odstraní ukazatel z mapy
             if (userMarker) {
                 userMarker.remove();
                 userMarker = null;
             }
-            // Vrátí mapu do původního přiblížení a pozice
+            // Vrátí mapu do původního stavu
             map.setView([49.8175, 15.473], 7);
         });
     }
 
-    // Skryje našeptávač, pokud uživatel klikne kamkoliv jinam na stránce
+    // Skryje našeptávač, pokud uživatel klikne mimo vyhledávací blok
     document.addEventListener('click', (e) => {
         if (autocompleteEl && !e.target.closest('.search-block')) {
             autocompleteEl.style.display = 'none';
@@ -55,12 +58,11 @@ function initSearch() {
     });
 }
 
-// Funkce pro volání externího API a získání návrhů adres
+// Funkce pro volání API a získání návrhů adres
 async function fetchAddressSuggestions(query) {
     const autocompleteEl = document.getElementById('autocomplete');
     if (!autocompleteEl) return;
 
-    // Adresa API pro našeptávání adres v ČR
     const url = `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(query)}&countrycodes=cz&format=json&limit=5`;
 
     try {
@@ -105,8 +107,11 @@ function displaySuggestions(suggestions) {
     });
 }
 
-// Funkce, která se zavolá po výběru adresy z našeptávače
+// Funkce, která se zavolá po výběru adresy
 function selectAddress(lat, lon) {
+    // Uložíme nově vyhledanou polohu pro generování tras
+    userSearchedLocation = { lat: lat, lon: lon };
+
     showUserMarker(lat, lon);
     filterPobockyByDistance(lat, lon);
     map.flyTo([lat, lon], 14);
