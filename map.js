@@ -18,7 +18,15 @@ function renderMapMarkers(pobocky) {
     pobocky.forEach((p, index) => {
         if (!p.lat || !p.lng) return; // Přeskočí pobočky bez souřadnic
 
-        const googleMapsUrl = `https://www.google.com/maps/dir/?api=1&destination=${p.lat},${p.lng}`;
+        let googleMapsUrl;
+        // Zkontrolujeme, zda máme uloženou polohu od uživatele
+        if (userSearchedLocation) {
+            // Vytvoříme URL pro trasu z bodu A (hledaná poloha) do bodu B (pobočka)
+            googleMapsUrl = `https://www.google.com/maps/dir/${userSearchedLocation.lat},${userSearchedLocation.lon}/${p.lat},${p.lng}`;
+        } else {
+            // Původní URL, která jen ukáže na cíl a vyzve k zadání počáteční polohy
+            googleMapsUrl = `https://www.google.com/maps/dir/?api=1&destination=${p.lat},${p.lng}`;
+        }
         
         const popupContent = `
             <b>${p['Název']}</b><br>
@@ -53,9 +61,9 @@ function highlightMarker(index, pobocka) {
 function showUserMarker(lat, lng) {
     const markerOptions = {
         radius: 7,
-        color: '#ffffff',
-        weight: 2,
-        fillColor: '#007bff',
+        color: '#ffffff', // Bílý okraj
+        weight: 2,         // Tloušťka okraje
+        fillColor: '#007bff', // Modrá výplň
         fillOpacity: 1
     };
 
@@ -64,9 +72,10 @@ function showUserMarker(lat, lng) {
     } else {
         userMarker = L.circleMarker([lat, lng], markerOptions).addTo(map);
     }
+    // Již neotevíráme automaticky pop-up, pouze zobrazíme bod
 }
 
-// Výpočet vzdálenosti mezi dvěma body
+// Výpočet vzdálenosti mezi dvěma body (Haversine formule)
 function haversineDistance(lat1, lon1, lat2, lon2) {
     const R = 6371; // Poloměr Země v km
     const dLat = (lat2 - lat1) * Math.PI / 180;
