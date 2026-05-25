@@ -1,5 +1,6 @@
 let allPobocky = [];
 let currentPobocky = [];
+let userSearchedLocation = null; // Uloží poslední hledanou polohu pro generování trasy
 
 document.addEventListener('DOMContentLoaded', () => {
     // Kontrola, zda se načetla knihovna pro mapy
@@ -124,6 +125,8 @@ function getUserLocation() {
 
     navigator.geolocation.getCurrentPosition(position => {
         const { latitude, longitude } = position.coords;
+        // Uložíme aktuální polohu pro generování tras
+        userSearchedLocation = { lat: latitude, lon: longitude };
         selectAddress(latitude, longitude);
     }, () => {
         alert("Nepodařilo se zjistit vaši polohu. Ujistěte se, že jste povolili přístup k poloze.");
