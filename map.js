@@ -1,5 +1,3 @@
-// frontend/js/map.js
-
 let map = null;
 let userMarker = null;
 let pobockyMarkers = [];
@@ -12,25 +10,29 @@ function initMap() {
 }
 
 function renderMapMarkers(pobocky) {
+    // Smazání starých markerů
     pobockyMarkers.forEach(marker => marker.remove());
     pobockyMarkers = [];
 
+    // Vytvoření nových markerů pro každou pobočku
     pobocky.forEach((p, index) => {
-        if (!p.lat || !p.lng) return;
+        if (!p.lat || !p.lng) return; // Přeskočí pobočky bez souřadnic
 
         const googleMapsUrl = `https://www.google.com/maps/dir/?api=1&destination=${p.lat},${p.lng}`;
         
         const popupContent = `
             <b>${p['Název']}</b><br>
             ${p['Ulice']}, ${p['Město']}<br><br>
-            <a href="${googleMapsUrl}" target="_blank">Navigovat na Google Maps</a>
+            <a href="${googleMapsUrl}" target="_blank" rel="noopener noreferrer">Navigovat na Google Maps</a>
         `;
 
         const marker = L.marker([p.lat, p.lng])
             .addTo(map)
             .bindPopup(popupContent);
         
-        marker.on('click', () => setActiveItem(index));
+        marker.on('click', () => {
+            setActiveItem(index);
+        });
         pobockyMarkers.push(marker);
     });
 }
@@ -47,20 +49,24 @@ function highlightMarker(index, pobocka) {
     }
 }
 
+// Zobrazí decentní modrý bod pro hledanou polohu
 function showUserMarker(lat, lng) {
+    const markerOptions = {
+        radius: 7,
+        color: '#ffffff',
+        weight: 2,
+        fillColor: '#007bff',
+        fillOpacity: 1
+    };
+
     if (userMarker) {
         userMarker.setLatLng([lat, lng]);
     } else {
-        userMarker = L.circleMarker([lat, lng], {
-            radius: 8,
-            color: '#2596be',
-            fillColor: '#2596be',
-            fillOpacity: 1
-        }).addTo(map);
+        userMarker = L.circleMarker([lat, lng], markerOptions).addTo(map);
     }
-    userMarker.bindPopup("Vámi hledaná poloha").openPopup();
 }
 
+// Výpočet vzdálenosti mezi dvěma body
 function haversineDistance(lat1, lon1, lat2, lon2) {
     const R = 6371; // Poloměr Země v km
     const dLat = (lat2 - lat1) * Math.PI / 180;
